@@ -14,8 +14,14 @@ class BookViewModel: ObservableObject {
         self.book = book
     }
     
-    func fetchData() {
-        guard let url = URL(string: )
+    func fetchData() -> URL? {
+        guard let route = getApiRoute(forType: .Book),
+              let url = URL(string: route) else {
+            print("Error constructing URL for books")
+            return nil
+        }
+        print(url.absoluteString)
+        return url
     }
         
 }
