@@ -10,13 +10,23 @@ import Foundation
 /**
  A Contentful-powered book model, with reformatted data for ease of use when working with it locally
  */
-struct Book: Codable, Content {
-    let id: String
-    let updatedAt: Date
-    let createdAt: Date
+struct Book: Content {
+    let sysContent: SysContent
     let title: String
     let author: String
     let readDate: Date
+    
+    var id: String {
+        return sysContent.id
+    }
+    
+    var updatedAt: Date {
+        return sysContent.updatedAt
+    }
+    
+    var createdAt: Date {
+        return sysContent.createdAt
+    }
     
     private static var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -27,12 +37,6 @@ struct Book: Codable, Content {
     enum CodingKeys: String, CodingKey {
         case sys
         case fields
-    }
-    
-    enum SysCodingKeys: String, CodingKey {
-        case id
-        case updatedAt
-        case createdAt
     }
     
     enum FieldsCodingKeys: String, CodingKey {
@@ -55,13 +59,7 @@ struct Book: Codable, Content {
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        let sysContainer = try container.nestedContainer(keyedBy: SysCodingKeys.self, forKey: .sys)
-        id = try sysContainer.decode(String.self, forKey: .id)
-        let updatedAtString = try sysContainer.decode(String.self, forKey: .updatedAt)
-        updatedAt = Entry.dateFormatter.date(from: updatedAtString)!
-        let createdAtString = try sysContainer.decode(String.self, forKey: .createdAt)
-        createdAt = Entry.dateFormatter.date(from: createdAtString)!
+        sysContent = try SysContent(from: decoder)
         
         let fieldsContainer = try container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
         
@@ -78,11 +76,7 @@ struct Book: Codable, Content {
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        var sysContainer = container.nestedContainer(keyedBy: SysCodingKeys.self, forKey: .sys)
-        try sysContainer.encode(id, forKey: .id)
-        try sysContainer.encode(updatedAt, forKey: .updatedAt)
-        try sysContainer.encode(createdAt, forKey: .createdAt)
+        try sysContent.encode(to: encoder)
         
         var fieldsContainer = container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
         

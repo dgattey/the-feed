@@ -7,10 +7,11 @@
 
 import Foundation
 
-protocol Content {
+protocol Content: Identifiable, Codable {
     var id: String { get }
     var updatedAt: Date { get }
     var createdAt: Date { get }
+    var sysContent: SysContent { get }
 }
 
 /**
@@ -27,13 +28,6 @@ enum Entry: Codable, Identifiable {
         case .book(let book): return book.id
         case .unknown: return "unknown"
         }
-    }
-    
-    static var dateFormatter: ISO8601DateFormatter {
-        let isoFormatter = ISO8601DateFormatter()
-        // Configure the formatter to handle fractional seconds
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return isoFormatter
     }
     
     enum CodingKeys: String, CodingKey {
