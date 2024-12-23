@@ -24,8 +24,8 @@ enum Entry: Codable, Identifiable {
     
     var id: String {
         switch (self) {
-            case .book(let book): return book.id
-            case .unknown: return "unknown"
+        case .book(let book): return book.id
+        case .unknown: return "unknown"
         }
     }
     

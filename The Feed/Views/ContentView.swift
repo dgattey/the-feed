@@ -18,12 +18,12 @@ struct ContentView: View {
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding()
                     .scaleEffect(2)
-            } else if (viewModel.error != nil) {
+            } else if let error = viewModel.error {
                 Section {
                     Text("Error")
                         .font(.title)
                         .foregroundColor(.red)
-                    Text(viewModel.error!.localizedDescription)
+                    Text(error)
                 }
                 .padding()
                 .frame(maxWidth: 400)
