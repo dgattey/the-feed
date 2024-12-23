@@ -16,25 +16,19 @@ struct ContentfulClient {
     }
     
     /**
-     Loads API key from the environment variables for this schema. Go to Product > Scheme > Edit Scheme > Environment Variables to set it to a value from [Contentful's CMA tokens](https://app.contentful.com/account/profile/cma_tokens).
+     Create a file with a struct called Secrets if this is missing. It is a value from [Contentful's CMA tokens](https://app.contentful.com/account/profile/cma_tokens).
      */
-    private static var apiKey: String {
-        guard let apiKey = ProcessInfo.processInfo.environment["CONTENTFUL_API_KEY"] else {
-            assert(false, "Please set CONTENTFUL_API_KEY")
-        }
-        return apiKey
-    }
+    private static let apiKey: String = Secrets.contentfulApiKey
 
     /**
-     Loads the space's ID from environment variables for this schema to construct a base API URL. Go to Product > Scheme > Edit Scheme > Environment Variables to set it to a value from [Contentful's space url](https://app.contentful.com/spaces)
+     Create a file with a struct called Secrets if this is missing. It is a value used to construct a base API URL from [Contentful's space url](https://app.contentful.com/spaces)
      */
     private static var baseApiUrl: URL {
-        guard let spaceId = ProcessInfo.processInfo.environment["CONTENTFUL_SPACE_ID"] else {
-            assert(false, "Please set CONTENTFUL_SPACE_ID")
-        }
+        let spaceId = Secrets.contentfulSpaceId
         let baseApiRoute = "https://api.contentful.com/spaces/\(spaceId)/environments/main/"
         guard let baseApiUrl = URL(string: baseApiRoute) else {
             assert(false, "Could not construct URL")
+            return URL(string: "")!
         }
         return baseApiUrl
     }
