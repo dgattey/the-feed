@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol Content: Identifiable, Codable {
+protocol Content: Identifiable, Codable, Hashable {
     var id: String { get }
     var updatedAt: Date { get }
     var createdAt: Date { get }
@@ -19,7 +19,7 @@ protocol Content: Identifiable, Codable {
  // TODO: @dgattey implement rest: these depend on sys.contentType.sys.id - if textBlock, we have slug and content, each with en-us entries inside, with content, for example. if location we have initialZoom, slug, image, point, zoomLevels. if project we have layout, thumbnail, creationDate, title, link, type, description.
 
  */
-enum Entry: Codable, Identifiable {
+enum Entry: Codable, Identifiable, Hashable {
     case book(Book)
     case location(Location)
     case unknown

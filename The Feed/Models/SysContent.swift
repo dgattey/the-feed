@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SysContent: Codable {
+struct SysContent: Codable, Hashable {
     let id: String
     let updatedAt: Date
     let createdAt: Date

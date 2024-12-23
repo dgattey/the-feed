@@ -19,32 +19,45 @@ class EntriesViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    func fetchData() -> Void {
-        isLoading = true
-        guard let publisher = ContentfulClient.getDataTaskPublisher(forType: .entries) else {
-            error = "Could not build request"
-            return
+    func fetchData() async {
+        DispatchQueue.main.sync {
+            isLoading = true
         }
-        publisher
-            .decode(type: Entries.self, decoder: JSONDecoder())
-            .mapError { error in
-                // Transforming the error to a more specific type
-                if let decodingError = error as? DecodingError {
-                    return NetworkError.decodingError(decodingError)
-                }
-                
-                return NetworkError.invalidResponse
+        
+        // Create a promise to handle the async operation
+        let result: Result<Entries, NetworkError> = await withCheckedContinuation { continuation in
+            guard let publisher = ContentfulClient.getDataTaskPublisher(forType: .entries) else {
+                continuation.resume(returning: .failure(.invalidResponse))
+                return
             }
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { completion in
-                self.isLoading = false
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    self.error = error.localizedDescription
+            
+            publisher
+                .decode(type: Entries.self, decoder: JSONDecoder())
+                .mapError { error in
+                    if let decodingError = error as? DecodingError {
+                        return NetworkError.decodingError(decodingError)
+                    }
+                    return NetworkError.invalidResponse
                 }
-            }, receiveValue: { entries in
+                .receive(on: DispatchQueue.main)
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        break
+                    case .failure(let error):
+                        continuation.resume(returning: .failure(error))
+                    }
+                }, receiveValue: { entries in
+                    continuation.resume(returning: .success(entries))
+                })
+                .store(in: &cancellables)
+        }
+        
+        // Handle the result of the async operation
+        switch result {
+        case .success(let entries):
+            DispatchQueue.main.sync {
+                self.isLoading = false
                 self.entries = entries.items.filter { entry in
                     switch entry {
                     case .unknown:
@@ -53,7 +66,12 @@ class EntriesViewModel: ObservableObject {
                         return true
                     }
                 }
-            })
-            .store(in: &cancellables)
+            }
+        case .failure(let error):
+            DispatchQueue.main.sync {
+                self.isLoading = false
+                self.error = error.localizedDescription
+            }
+        }
     }
 }

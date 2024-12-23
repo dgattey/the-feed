@@ -9,27 +9,47 @@ import SwiftUI
 
 struct ContentView: View {
     
+    @State private var selectedItem: Entry? = nil
     @ObservedObject var viewModel = EntriesViewModel()
     
     var body: some View {
         VStack {
-            if (viewModel.isLoading) {
-                LoadingView()
-            } else if let error = viewModel.error {
+            if let error = viewModel.error {
                 ErrorView(error: error)
             } else {
-                NavigationView {
-                    List {
-                        ForEach($viewModel.entries) { $entry in
-                            ListItemView(entry: entry)
-                        }
+                NavigationSplitView {
+                    List($viewModel.entries, selection: $selectedItem) { $entry in
+                        ListItemView(entry: $entry)
                     }
-                    .navigationTitle("All books")
+                    .refreshable {
+                        await viewModel.fetchData()
+                    }
+                    .navigationTitle("The Feed")
+#if os(macOS)
+                    // On macOS, show toolbar on the list view for refreshing without the sidebar toggle and react to esc to deselect all
+                    .toolbar {
+                        EntriesToolbar(viewModel: viewModel)
+                    }
+                    .toolbar(removing: .sidebarToggle)
+                    .onKeyPress(.escape) {
+                        selectedItem = nil
+                        return .handled
+                    }
+#endif
+                } detail: {
+                    if let item = selectedItem {
+                        DetailView(entry: item)
+                    } else {
+                        Text("Pick an entry").font(.title)
+                    }
                 }
+                
             }
         }
         .onAppear {
-            self.viewModel.fetchData()
+            Task {
+                await viewModel.fetchData()
+            }
         }
     }
 }

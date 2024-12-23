@@ -11,10 +11,10 @@ import SwiftUI
  Shows a preview of each item in a list view - this delegates out to all the other views.
  */
 struct ListItemView: View {
-    let entry: Entry
+    @Binding var entry: Entry
     
     var body: some View {
-        NavigationLink(destination: destinationView(for: entry)) {
+        NavigationLink(value: entry) {
             switch entry {
             case .book(let book):
                 BookListItemView(book: book)
@@ -25,18 +25,6 @@ struct ListItemView: View {
                     Text("Unknown").font(.headline)
                 }
             }
-        }
-    }
-    
-    @ViewBuilder
-    private func destinationView(for entry: Entry) -> some View {
-        switch entry {
-        case .book(let book):
-            BookDetailView(book: book)
-        case .location(let location):
-            LocationDetailView(location: location)
-        case .unknown:
-            Text("Unknown")
         }
     }
 }
