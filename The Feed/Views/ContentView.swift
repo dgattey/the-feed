@@ -14,35 +14,14 @@ struct ContentView: View {
     var body: some View {
         VStack {
             if (viewModel.isLoading) {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .padding()
-                    .scaleEffect(2)
+                LoadingView()
             } else if let error = viewModel.error {
-                Section {
-                    Text("Error")
-                        .font(.title)
-                        .foregroundColor(.red)
-                    Text(error)
-                }
-                .padding()
-                .frame(maxWidth: 400)
+                ErrorView(error: error)
             } else {
                 NavigationView {
                     List {
                         ForEach($viewModel.entries) { $entry in
-                            NavigationLink(destination: destinationView(for: entry)) {
-                                switch entry {
-                                case .book(let book):
-                                    VStack {
-                                        Text(book.title).font(.headline)
-                                    }
-                                case .unknown:
-                                    VStack {
-                                        Text("Unknown").font(.headline)
-                                    }
-                                }
-                            }
+                            ListItemView(entry: entry)
                         }
                     }
                     .navigationTitle("All books")
@@ -52,35 +31,6 @@ struct ContentView: View {
         .onAppear {
             self.viewModel.fetchData()
         }
-    }
-}
-
-@ViewBuilder
-private func destinationView(for entry: Entry) -> some View {
-    switch entry {
-    case .book(let book):
-        BookDetailView(book: book)
-    case .unknown:
-        UnknownDetailView()
-    }
-}
-// Detail view for Book
-struct BookDetailView: View {
-    let book: Book
-
-    var body: some View {
-        Text("Details for \(book.title)")
-            .font(.largeTitle)
-            .padding()
-    }
-}
-
-// Detail view for Unknown Entry
-struct UnknownDetailView: View {
-    var body: some View {
-        Text("Details for unknown entry")
-            .font(.largeTitle)
-            .padding()
     }
 }
 

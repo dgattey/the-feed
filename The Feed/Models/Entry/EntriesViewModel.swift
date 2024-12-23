@@ -27,6 +27,14 @@ class EntriesViewModel: ObservableObject {
         }
         publisher
             .decode(type: Entries.self, decoder: JSONDecoder())
+            .mapError { error in
+                // Transforming the error to a more specific type
+                if let decodingError = error as? DecodingError {
+                    return NetworkError.decodingError(decodingError)
+                }
+                
+                return NetworkError.invalidResponse
+            }
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { completion in
                 self.isLoading = false
@@ -34,11 +42,7 @@ class EntriesViewModel: ObservableObject {
                 case .finished:
                     break
                 case .failure(let error):
-                    if let networkError = error as? NetworkError {
-                        self.error = networkError.errorDescription
-                    } else {
-                        self.error = "An unexpected error occurred."
-                    }
+                    self.error = error.localizedDescription
                 }
             }, receiveValue: { entries in
                 self.entries = entries.items.filter { entry in

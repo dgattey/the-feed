@@ -19,11 +19,11 @@ enum NetworkError: Error, LocalizedError {
     // Some 5xx error
     case serverError(String)
     // Couldn't decode the response properly
-    case decodingError(Error)
+    case decodingError(DecodingError)
     // Malformed data/response
     case invalidResponse
     
-    public var errorDescription: String? {
+    var localizedDescription: String {
         switch self {
         case .redirectionError(let message):
             fallthrough
@@ -34,7 +34,18 @@ enum NetworkError: Error, LocalizedError {
         case .serverError(let message):
             return message
         case .decodingError(let error):
-            return "Decoding error: \(error.localizedDescription)"
+            switch(error) {
+            case .valueNotFound(let value, let context):
+                return "Decoding error: \(value) not found: \(context.underlyingError?.localizedDescription ?? context.debugDescription)"
+            case .dataCorrupted(let context):
+                return "Decoding error from corrupted data: \(context.debugDescription) \(context.underlyingError.debugDescription)"
+            case .typeMismatch(let type, let context):
+                return "Decoding error: \(type) mismatch: \(context.underlyingError?.localizedDescription ?? context.debugDescription)"
+            case .keyNotFound(let key, let context):
+                return "Decoding error: \(key) not found: \(context.underlyingError?.localizedDescription ?? context.debugDescription)"
+            default:
+                return "Decoding error: \(error.localizedDescription)"
+            }
         case .invalidResponse:
             return "Invalid response from server"
         }

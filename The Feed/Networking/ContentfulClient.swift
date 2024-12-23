@@ -48,7 +48,7 @@ struct ContentfulClient {
     static func getDataTaskPublisher(
         forType type: ContentType,
         usingMethod httpMethod: HttpMethod = .get
-    ) -> Publishers.TryMap<URLSession.DataTaskPublisher, Data>? {
+    ) -> AnyPublisher<Data, Error>? {
         guard let url = getUrl(forType: type) else {
             return nil
         }
@@ -57,5 +57,6 @@ struct ContentfulClient {
         request.setValue("Bearer \(Secrets.contentfulApiKey)", forHTTPHeaderField: "Authorization")
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap(NetworkError.handle)
+            .eraseToAnyPublisher()
     }
 }
