@@ -1,2 +1,8 @@
-The Feed.xcodeproj/xcuserdata/dgattey.xcuserdatad
-The Feed/Networking/Secrets.swift
+# User-specific files
+*.xcuserdatad
+
+# Secrets, should never be checked in
+Secrets.swift
+
+# tmp files
+*.swp
