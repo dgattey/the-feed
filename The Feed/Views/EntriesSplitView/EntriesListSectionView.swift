@@ -1,5 +1,5 @@
 //
-//  ListItemView.swift
+//  EntriesListSectionView.swift
 //  The Feed
 //
 //  Created by Dylan Gattey on 12/23/24.
@@ -8,9 +8,24 @@
 import SwiftUI
 
 /**
- Shows a preview of each item in a list view - this delegates out to all the other views.
+ Shows a section in the list view for entries - shows a group name and entries below.
  */
-struct ListItemView: View {
+struct EntriesListSectionView: View {
+    @Binding var group: GroupedEntries
+    
+    var body: some View {
+        Section(header: Text(group.groupName)) {
+            ForEach($group.entries) { $entry in
+                EntriesListItemView(entry: $entry)
+            }
+        }
+    }
+}
+
+/**
+ Shows an individual entry in the list of all entries, to be clicked on.
+ */
+private struct EntriesListItemView: View {
     @Binding var entry: Entry
     
     var body: some View {

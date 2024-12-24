@@ -13,7 +13,7 @@ import Combine
  TODO: @dgattey build pagination
  */
 class EntriesViewModel: ObservableObject {
-    @Published var entries = [Entry]()
+    @Published var entries = [GroupedEntries]()
     @Published var isLoading = false
     @Published var error: String?
     
@@ -25,14 +25,14 @@ class EntriesViewModel: ObservableObject {
         }
         
         // Create a promise to handle the async operation
-        let result: Result<Entries, NetworkError> = await withCheckedContinuation { continuation in
+        let result: Result<EntriesResponse, NetworkError> = await withCheckedContinuation { continuation in
             guard let publisher = ContentfulClient.getDataTaskPublisher(forType: .entries) else {
                 continuation.resume(returning: .failure(.invalidResponse))
                 return
             }
             
             publisher
-                .decode(type: Entries.self, decoder: JSONDecoder())
+                .decode(type: EntriesResponse.self, decoder: JSONDecoder())
                 .mapError { error in
                     if let decodingError = error as? DecodingError {
                         return NetworkError.decodingError(decodingError)
@@ -55,17 +55,10 @@ class EntriesViewModel: ObservableObject {
         
         // Handle the result of the async operation
         switch result {
-        case .success(let entries):
+        case .success(let entriesResponse):
             DispatchQueue.main.sync {
                 self.isLoading = false
-                self.entries = entries.items.filter { entry in
-                    switch entry {
-                    case .unknown:
-                        return false
-                    default:
-                        return true
-                    }
-                }
+                self.entries = groupEntries(fromResponse: entriesResponse)
             }
         case .failure(let error):
             DispatchQueue.main.sync {
@@ -73,5 +66,27 @@ class EntriesViewModel: ObservableObject {
                 self.error = error.localizedDescription
             }
         }
+    }
+    
+    /**
+     Groups and filters entries
+     */
+    private func groupEntries(fromResponse entries: EntriesResponse) -> [GroupedEntries] {
+        let books = entries.items.filter { entry in
+            if case .book(_) = entry {
+                return true
+            }
+            return false
+        }
+        let locations = entries.items.filter { entry in
+            if case .location(_) = entry {
+                return true
+            }
+            return false
+        }
+        return [
+            GroupedEntries(groupName: "Books", entries: books),
+            GroupedEntries(groupName: "Locations", entries: locations)
+        ]
     }
 }

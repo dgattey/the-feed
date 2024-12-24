@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+/**
+ Shows a full page error message view
+ */
 struct ErrorView: View {
     let error: String
     
