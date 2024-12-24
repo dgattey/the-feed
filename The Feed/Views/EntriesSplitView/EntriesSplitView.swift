@@ -20,7 +20,9 @@ struct EntriesSplitView: View {
                 ErrorView(error: error)
             } else {
                 NavigationSplitView {
-                    entriesList
+                    VStack {
+                        entriesList
+                    }
                 } detail: {
                     entryDetail
                 }
@@ -34,31 +36,65 @@ struct EntriesSplitView: View {
     }
     
     private var entriesList: some View {
-        List(viewModel.filteredGroupedEntries, selection: $selectedItem) { group in
-            EntriesListSectionView(group: Binding(
-                get: { group },
-                set: { newGroup in
-                    let index = viewModel.groupedEntries.firstIndex(of: group)
-                    if let index {
-                        viewModel.groupedEntries[index] = newGroup
-                    } else {
-                        viewModel.groupedEntries.append(newGroup)
+        List(selection: $selectedItem) {
+            ForEach(viewModel.filteredGroupedEntries) { group in
+                EntriesListSectionView(group: Binding(
+                    get: { group },
+                    set: { newGroup in
+                        let index = viewModel.groupedEntries.firstIndex(of: group)
+                        if let index {
+                            viewModel.groupedEntries[index] = newGroup
+                        } else {
+                            viewModel.groupedEntries.append(newGroup)
+                        }
                     }
-                }
-            ))
+                ))
+            }
+            noSearchResults
         }
         .refreshable { await viewModel.fetchData() }
-        .searchable(text: $viewModel.searchText)
         .navigationTitle("The Feed")
-#if os(macOS)
+        .frame(alignment: .top)
+        #if os(iOS)
+        .searchable(
+            text: $viewModel.searchText,
+            placement: .navigationBarDrawer(displayMode:.always),
+            prompt: Text("Search your feed")
+        )
+        #else
         // On macOS, show toolbar on the list view for refreshing without the sidebar toggle and react to esc to deselect all
+        .searchable(
+            text: $viewModel.searchText,
+            placement: .sidebar,
+            prompt: Text("Search your feed")
+        )
         .toolbar { toolbarContent }
         .toolbar(removing: .sidebarToggle)
         .onKeyPress(.escape) {
             selectedItem = nil
             return .handled
         }
-#endif
+        #endif
+    }
+    
+    /**
+     If the user has searched but there's nothing, show this view
+     */
+    private var noSearchResults: some View {
+        Group {
+            if viewModel.filteredGroupedEntries.isEmpty && !viewModel.searchText.isEmpty {
+                Text("No results found for '\(viewModel.searchText)'")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                    .lineLimit(.max)
+                    .padding(.vertical)
+                    #if os(iOS)
+                    .padding(.horizontal)
+                    #endif
+                    .containerRelativeFrame(.horizontal, alignment: .center)
+                    .multilineTextAlignment(.center)
+            }
+        }
     }
     
     /**
