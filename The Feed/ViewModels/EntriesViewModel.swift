@@ -13,11 +13,36 @@ import Combine
  TODO: @dgattey build pagination
  */
 class EntriesViewModel: ObservableObject {
-    @Published var entries = [GroupedEntries]()
+    @Published var groupedEntries = [GroupedEntries]()
     @Published var isLoading = false
     @Published var error: String?
+    @Published var searchText: String = ""
     
     private var cancellables = Set<AnyCancellable>()
+    
+    var filteredGroupedEntries: [GroupedEntries] {
+        if searchText.isEmpty {
+            return groupedEntries
+        } else {
+            return groupedEntries.compactMap { group in
+                // Return the whole group if the group name contains search term
+                if (group.groupName.localizedCaseInsensitiveContains(searchText)) {
+                    return group
+                }
+                
+                // Filter entries for the current group
+                let filteredEntries = group.entries.filter { entry in
+                    entry.contains(searchText: searchText)
+                }
+                
+                // Only return groups that have matching entries
+                return filteredEntries.isEmpty ? nil : GroupedEntries(
+                    groupName: group.groupName,
+                    entries: filteredEntries
+                )
+            }
+        }
+    }
     
     func fetchData() async {
         DispatchQueue.main.sync {
@@ -58,7 +83,7 @@ class EntriesViewModel: ObservableObject {
         case .success(let entriesResponse):
             DispatchQueue.main.sync {
                 self.isLoading = false
-                self.entries = groupEntries(fromResponse: entriesResponse)
+                self.groupedEntries = groupEntries(fromResponse: entriesResponse)
             }
         case .failure(let error):
             DispatchQueue.main.sync {

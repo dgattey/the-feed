@@ -7,8 +7,18 @@
 
 import Foundation
 
-protocol Content: Identifiable, Codable, Hashable {
+/**
+ An entry or entry wrapper that is searchable and identifiable
+ */
+protocol SearchableEntry: Codable, Identifiable, Hashable {
     var id: String { get }
+    func contains(searchText: String) -> Bool
+}
+
+/**
+ The `Entry` enum is a container type wrapping a concrete instance. Every concrete instance should implement this.
+ */
+protocol ConcreteEntry: SearchableEntry {
     var updatedAt: Date { get }
     var createdAt: Date { get }
     var sysContent: SysContent { get }
@@ -19,7 +29,7 @@ protocol Content: Identifiable, Codable, Hashable {
  // TODO: @dgattey implement rest: these depend on sys.contentType.sys.id - if textBlock, we have slug and content, each with en-us entries inside, with content, for example. if location we have initialZoom, slug, image, point, zoomLevels. if project we have layout, thumbnail, creationDate, title, link, type, description.
 
  */
-enum Entry: Codable, Identifiable, Hashable {
+enum Entry: SearchableEntry {
     case book(Book)
     case location(Location)
     case unknown
@@ -29,6 +39,14 @@ enum Entry: Codable, Identifiable, Hashable {
         case .book(let book): return book.id
         case .location(let location): return location.id
         case .unknown: return "unknown"
+        }
+    }
+    
+    func contains(searchText: String) -> Bool {
+        switch (self) {
+        case .book(let book): return book.contains(searchText: searchText)
+        case .location(let location): return location.contains(searchText: searchText)
+        case .unknown: return false
         }
     }
     

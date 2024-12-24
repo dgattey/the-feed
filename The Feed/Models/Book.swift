@@ -10,7 +10,7 @@ import Foundation
 /**
  A Contentful-powered book model, with reformatted data for ease of use when working with it locally
  */
-struct Book: Content {
+struct Book: ConcreteEntry {
     let sysContent: SysContent
     let title: String
     let author: String
@@ -33,6 +33,10 @@ struct Book: Content {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
+    }
+    
+    func contains(searchText: String) -> Bool {
+        return title.localizedCaseInsensitiveContains(searchText) || author.localizedCaseInsensitiveContains(searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {

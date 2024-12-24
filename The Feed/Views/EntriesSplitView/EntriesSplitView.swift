@@ -34,10 +34,21 @@ struct EntriesSplitView: View {
     }
     
     private var entriesList: some View {
-        List($viewModel.entries, selection: $selectedItem) { $group in
-            EntriesListSectionView(group: $group)
+        List(viewModel.filteredGroupedEntries, selection: $selectedItem) { group in
+            EntriesListSectionView(group: Binding(
+                get: { group },
+                set: { newGroup in
+                    let index = viewModel.groupedEntries.firstIndex(of: group)
+                    if let index {
+                        viewModel.groupedEntries[index] = newGroup
+                    } else {
+                        viewModel.groupedEntries.append(newGroup)
+                    }
+                }
+            ))
         }
         .refreshable { await viewModel.fetchData() }
+        .searchable(text: $viewModel.searchText)
         .navigationTitle("The Feed")
 #if os(macOS)
         // On macOS, show toolbar on the list view for refreshing without the sidebar toggle and react to esc to deselect all

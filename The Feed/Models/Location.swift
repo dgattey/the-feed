@@ -10,7 +10,7 @@ import Foundation
 /**
  A Contentful-powered location model, with reformatted data for ease of use when working with it locally
  */
-struct Location: Content {
+struct Location: ConcreteEntry {
     let sysContent: SysContent
     let initialZoom: Float
     let slug: String
@@ -29,6 +29,10 @@ struct Location: Content {
     
     var createdAt: Date {
         return sysContent.createdAt
+    }
+    
+    func contains(searchText: String) -> Bool {
+        return slug.localizedCaseInsensitiveContains(searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {
