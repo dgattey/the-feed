@@ -13,11 +13,11 @@ struct ContentfulClient {
      All the routes for the content we'd like to load
      */
     enum ContentType: String {
-         case entries = "entries"
+         case entries
     }
 
     /**
-     Create a file with a struct called Secrets if this is missing. It is a value used to construct a base API URL from [Contentful's space url](https://app.contentful.com/spaces)
+     Create a file with a struct called Secrets if this is erroring. We use two secrets to construct a base API URL from [Contentful's space url](https://app.contentful.com/spaces) and a [personal access token from CMA tokens](https://app.contentful.com/account/profile/cma_tokens).
      */
     private static var baseApiUrl: URL? {
         let spaceId = Secrets.contentfulSpaceId
@@ -26,7 +26,9 @@ struct ContentfulClient {
             assert(false, "Could not construct URL")
             return nil
         }
-        return baseApiUrl
+        return baseApiUrl.appending(queryItems: [
+            .init(name: "access_token", value: Secrets.contentfulApiKey)
+        ])
     }
     
     /**
@@ -38,24 +40,24 @@ struct ContentfulClient {
         }
         switch type {
         case .entries:
-            return baseUrl.appendingPathComponent(type.rawValue)
+            return baseUrl
+                .appendingPathComponent(type.rawValue)
+                .appending(queryItems: [
+                    .init(name: "limit", value: "1000") // todo: @dgattey eventually remove this and do real pagination
+                ])
         }
     }
     
     /**
-     Returns a publisher set up to handle errors and authenticate properly, for later use.
+     Returns a publisher set up to handle errors for later use.
      */
     static func getDataTaskPublisher(
-        forType type: ContentType,
-        usingMethod httpMethod: HttpMethod = .get
+        forType type: ContentType
     ) -> AnyPublisher<Data, Error>? {
         guard let url = getUrl(forType: type) else {
             return nil
         }
-        var request = URLRequest(url: url)
-        request.httpMethod = httpMethod.rawValue
-        request.setValue("Bearer \(Secrets.contentfulApiKey)", forHTTPHeaderField: "Authorization")
-        return URLSession.shared.dataTaskPublisher(for: request)
+        return URLSession.shared.dataTaskPublisher(for: url)
             .tryMap(NetworkError.handle)
             .eraseToAnyPublisher()
     }
