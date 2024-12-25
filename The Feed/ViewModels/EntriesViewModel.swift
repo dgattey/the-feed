@@ -15,7 +15,6 @@ import SwiftUI
 class EntriesViewModel: ObservableObject {
     @Published var groupedEntries: [GroupedEntries] = []
     @Published var entries: [Entry] = []
-    @Published var selectedEntry: Entry? = nil
     @Published var isLoading = false
     @Published var error: String?
     @Published var searchText: String = ""
@@ -63,7 +62,6 @@ class EntriesViewModel: ObservableObject {
      */
     func fetchData(withPagination pagination: Pagination = .default) {
         DispatchQueue.main.async {
-            self.selectedEntry = nil
             self.isLoading = true
         }
         
