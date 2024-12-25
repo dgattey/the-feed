@@ -32,21 +32,29 @@ protocol ConcreteEntry: SearchableEntry {
 enum Entry: SearchableEntry {
     case book(Book)
     case location(Location)
-    case unknown
     
     var id: String {
-        switch (self) {
+        switch self {
         case .book(let book): return book.id
         case .location(let location): return location.id
-        case .unknown: return "unknown"
         }
+    }
+    
+    var category: GroupedEntriesCategory {
+        switch self {
+        case .book: return .book
+        case .location: return .location
+        }
+    }
+    
+    func contains(searchText: String, withCategory category: GroupedEntriesCategory) -> Bool {
+        return category == category && contains(searchText: searchText)
     }
     
     func contains(searchText: String) -> Bool {
         switch (self) {
         case .book(let book): return book.contains(searchText: searchText)
         case .location(let location): return location.contains(searchText: searchText)
-        case .unknown: return false
         }
     }
     
@@ -75,7 +83,7 @@ enum Entry: SearchableEntry {
             let location = try Location(from: decoder)
             self = .location(location)
         default:
-            self = .unknown
+            throw EntryTypeIgnoredError(ignoredType: type)
         }
     }
     
@@ -86,8 +94,6 @@ enum Entry: SearchableEntry {
             try container.encode(book)
         case .location(let location):
             try container.encode(location)
-        case .unknown:
-            return
         }
     }
     

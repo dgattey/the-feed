@@ -7,41 +7,51 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 /**
  Fetches and parses all entries for the entire list of entries. Pagination not built in, will limit to first 100 items.
  TODO: @dgattey build pagination
  */
 class EntriesViewModel: ObservableObject {
-    @Published var groupedEntries = [GroupedEntries]()
+    @Published var groupedEntries: [GroupedEntries] = []
+    @Published var entries: [Entry] = []
     @Published var isLoading = false
     @Published var error: String?
     @Published var searchText: String = ""
+    @Published var searchScope: GroupedEntriesCategory = .all
     
     private var cancellables = Set<AnyCancellable>()
     
     var filteredGroupedEntries: [GroupedEntries] {
-        if searchText.isEmpty {
+        guard !searchText.isEmpty else {
             return groupedEntries
-        } else {
-            return groupedEntries.compactMap { group in
-                // Return the whole group if the group name contains search term
-                if (group.groupName.localizedCaseInsensitiveContains(searchText)) {
-                    return group
-                }
-                
-                // Filter entries for the current group
-                let filteredEntries = group.entries.filter { entry in
-                    entry.contains(searchText: searchText)
-                }
-                
-                // Only return groups that have matching entries
-                return filteredEntries.isEmpty ? nil : GroupedEntries(
-                    groupName: group.groupName,
-                    entries: filteredEntries
-                )
-            }
         }
+        return groupedEntries.compactMap { group in
+            // Hide categories that don't match current search scope
+            if (searchScope != .all && searchScope != group.category) {
+                return nil
+            }
+            // Return the whole group if the group name contains search term
+            if (group.category.contains(searchText: searchText)) {
+                return group
+            }
+            
+            // Filter entries for the current group
+            let filteredEntries = group.entries.filter { entry in
+                entry.contains(searchText: searchText, withCategory: searchScope)
+            }
+            
+            // Only return groups that have matching entries
+            return filteredEntries.isEmpty ? nil : GroupedEntries(
+                category: group.category,
+                entries: filteredEntries
+            )
+        }
+    }
+    
+    var filteredEntries: [Entry] {
+        return entries.filter { $0.contains(searchText: searchText, withCategory: searchScope) }
     }
     
     func fetchData() async {
@@ -83,6 +93,7 @@ class EntriesViewModel: ObservableObject {
         case .success(let entriesResponse):
             DispatchQueue.main.sync {
                 self.isLoading = false
+                self.entries = entriesResponse.items
                 self.groupedEntries = groupEntries(fromResponse: entriesResponse)
             }
         case .failure(let error):
@@ -110,8 +121,8 @@ class EntriesViewModel: ObservableObject {
             return false
         }
         return [
-            GroupedEntries(groupName: "Books", entries: books),
-            GroupedEntries(groupName: "Locations", entries: locations)
+            GroupedEntries(category: .book, entries: books),
+            GroupedEntries(category: .location, entries: locations)
         ]
     }
 }

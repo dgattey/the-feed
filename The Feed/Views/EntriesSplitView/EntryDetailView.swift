@@ -19,8 +19,6 @@ struct EntryDetailView: View {
             BookDetailView(book: book)
         case .location(let location):
             LocationDetailView(location: location)
-        case .unknown:
-            Text("Unknown")
         }
     }
 }

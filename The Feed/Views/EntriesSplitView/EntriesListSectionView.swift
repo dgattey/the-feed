@@ -14,7 +14,7 @@ struct EntriesListSectionView: View {
     @Binding var group: GroupedEntries
     
     var body: some View {
-        Section(header: Text(group.groupName)) {
+        Section(header: Text(group.id)) {
             ForEach($group.entries) { $entry in
                 EntriesListItemView(entry: $entry)
             }
@@ -35,10 +35,6 @@ private struct EntriesListItemView: View {
                 BookListItemView(book: book)
             case .location(let location):
                 LocationListItemView(location: location)
-            case .unknown:
-                VStack {
-                    Text("Unknown").font(.headline)
-                }
             }
         }
     }

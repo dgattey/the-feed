@@ -32,7 +32,7 @@ struct ContentfulClient {
     }
     
     /**
-     Forms the full URL using any case-let objects if needed
+     Forms the full URL using any associated objects as needed
      */
     private static func getUrl(forType type: ContentType) -> URL? {
         guard let baseUrl = baseApiUrl else {

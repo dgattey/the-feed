@@ -75,6 +75,12 @@ struct EntriesSplitView: View {
             return .handled
         }
         #endif
+        .searchScopes($viewModel.searchScope) {
+            ForEach(GroupedEntriesCategory.allCases) { category in
+                Text(category.rawValue).tag(category)
+            }
+            
+        }
     }
     
     /**

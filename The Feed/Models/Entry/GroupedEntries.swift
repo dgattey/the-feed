@@ -5,14 +5,25 @@
 //  Created by Dylan Gattey on 12/23/24.
 //
 
+enum GroupedEntriesCategory: String, CaseIterable, SearchableEntry {
+    case all = "All"
+    case book = "Books"
+    case location = "Locations"
+    
+    var id: String { rawValue }
+    func contains(searchText: String) -> Bool {
+        return id.localizedCaseInsensitiveContains(searchText)
+    }
+}
+
 /**
  Groups together related entries with a title
  */
 struct GroupedEntries: Codable, Hashable, Identifiable {
     var id: String {
-        return groupName
+        return category.id
     }
 
-    let groupName: String
+    let category: GroupedEntriesCategory
     var entries: [Entry]
 }
