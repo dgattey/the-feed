@@ -19,7 +19,11 @@ class EntriesViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var searchText: String = ""
-    @Published var searchScope: GroupedEntriesCategory = .all
+    @Published var selectedTokens: [GroupedEntriesCategory] = []
+    @Published var suggestedTokens = GroupedEntriesCategory.allCases.filter { category in
+        // Remove all case
+        return category != GroupedEntriesCategory.all
+    }
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -28,8 +32,8 @@ class EntriesViewModel: ObservableObject {
             return groupedEntries
         }
         return groupedEntries.compactMap { group in
-            // Hide categories that don't match current search scope
-            if (searchScope != .all && searchScope != group.category) {
+            // Hide categories that don't match current tokens
+            if (selectedTokens.count > 0 && !selectedTokens.contains(group.category)) {
                 return nil
             }
             // Return the whole group if the group name contains search term
@@ -39,7 +43,7 @@ class EntriesViewModel: ObservableObject {
             
             // Filter entries for the current group
             let filteredEntries = group.entries.filter { entry in
-                entry.contains(searchText: searchText, withCategory: searchScope)
+                entry.contains(searchText: searchText, withCategories: selectedTokens)
             }
             
             // Only return groups that have matching entries
@@ -51,7 +55,7 @@ class EntriesViewModel: ObservableObject {
     }
     
     var filteredEntries: [Entry] {
-        return entries.filter { $0.contains(searchText: searchText, withCategory: searchScope) }
+        return entries.filter { $0.contains(searchText: searchText, withCategories: selectedTokens) }
     }
     
     func fetchData() async {

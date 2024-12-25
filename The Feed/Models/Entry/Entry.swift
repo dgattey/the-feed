@@ -47,8 +47,11 @@ enum Entry: SearchableEntry {
         }
     }
     
-    func contains(searchText: String, withCategory category: GroupedEntriesCategory) -> Bool {
-        return category == category && contains(searchText: searchText)
+    func contains(searchText: String, withCategories categories: [GroupedEntriesCategory]) -> Bool {
+        if (categories.count > 0 && !categories.contains(category)) {
+            return false
+        }
+        return contains(searchText: searchText)
     }
     
     func contains(searchText: String) -> Bool {

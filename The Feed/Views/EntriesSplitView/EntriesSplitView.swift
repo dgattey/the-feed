@@ -58,15 +58,21 @@ struct EntriesSplitView: View {
         #if os(iOS)
         .searchable(
             text: $viewModel.searchText,
+            tokens: $viewModel.selectedTokens,
+            suggestedTokens: $viewModel.suggestedTokens,
             placement: .navigationBarDrawer(displayMode:.always),
-            prompt: Text("Search your feed")
+            prompt: Text("Search your feed"),
+            token: { Text($0.rawValue) }
         )
         #else
         // On macOS, show toolbar on the list view for refreshing without the sidebar toggle and react to esc to deselect all
         .searchable(
             text: $viewModel.searchText,
+            tokens: $viewModel.selectedTokens,
+            suggestedTokens: $viewModel.suggestedTokens,
             placement: .sidebar,
-            prompt: Text("Search your feed")
+            prompt: Text("Search your feed"),
+            token: { Text($0.rawValue) }
         )
         .toolbar { toolbarContent }
         .toolbar(removing: .sidebarToggle)
@@ -75,12 +81,6 @@ struct EntriesSplitView: View {
             return .handled
         }
         #endif
-        .searchScopes($viewModel.searchScope) {
-            ForEach(GroupedEntriesCategory.allCases) { category in
-                Text(category.rawValue).tag(category)
-            }
-            
-        }
     }
     
     /**
