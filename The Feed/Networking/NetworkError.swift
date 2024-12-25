@@ -52,7 +52,7 @@ enum NetworkError: Error, LocalizedError {
     }
     
     /**
-     Call this as a `tryMap` before you decode the data for a `URLSession.shared.dataTaskPublisher` call. It will properly handle all errors and return data or throw a proper error.
+     Call this as a `tryMap` before you decode the data for a `dataTaskPublisher` call. It will properly handle all errors and return data or throw a proper error.
      */
     static func handle(output: URLSession.DataTaskPublisher.Output) throws -> Data {
         guard let httpResponse = output.response as? HTTPURLResponse else {

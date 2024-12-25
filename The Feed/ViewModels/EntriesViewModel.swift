@@ -15,6 +15,7 @@ import SwiftUI
 class EntriesViewModel: ObservableObject {
     @Published var groupedEntries: [GroupedEntries] = []
     @Published var entries: [Entry] = []
+    @Published var selectedEntry: Entry? = nil
     @Published var isLoading = false
     @Published var error: String?
     @Published var searchText: String = ""
@@ -60,53 +61,62 @@ class EntriesViewModel: ObservableObject {
     /**
      Fetches data with optional limit/skip
      */
-    func fetchData(withPagination pagination: Pagination = .default) async {
-        DispatchQueue.main.sync {
-            isLoading = true
+    func fetchData(withPagination pagination: Pagination = .default) {
+        DispatchQueue.main.async {
+            self.selectedEntry = nil
+            self.isLoading = true
         }
         
-        // Create a promise to handle the async operation
-        let result: Result<EntriesResponse, NetworkError> = await withCheckedContinuation { continuation in
-            guard let publisher = ContentfulClient.getDataTaskPublisher(
-                forType: .entries,
-                withPagination: pagination
-            ) else {
-                continuation.resume(returning: .failure(.invalidResponse))
-                return
-            }
-            
-            publisher
-                .decode(type: EntriesResponse.self, decoder: JSONDecoder())
-                .mapError { error in
-                    if let decodingError = error as? DecodingError {
-                        return NetworkError.decodingError(decodingError)
-                    }
-                    return NetworkError.invalidResponse
-                }
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        break
-                    case .failure(let error):
-                        continuation.resume(returning: .failure(error))
-                    }
-                }, receiveValue: { entries in
-                    continuation.resume(returning: .success(entries))
-                })
-                .store(in: &cancellables)
+        func handleError(_ error: NetworkError) {
+            self.isLoading = false
+            self.error = error.localizedDescription
         }
         
-        // Handle the result of the async operation
-        switch result {
-        case .success(let entriesResponse):
+        guard let publisher = ContentfulClient.getDataTaskPublisher(
+            forType: .entries,
+            withPagination: pagination
+        ) else {
             DispatchQueue.main.sync {
+                handleError(.invalidResponse)
+            }
+            return
+        }
+        
+        publisher
+            .tryMap { dataSource -> DataSource<EntriesResponse> in
+                let decoder = JSONDecoder()
+                let data = dataSource.value
+                let entriesResponse = try decoder.decode(EntriesResponse.self, from: data)
+                
+                // Wrap it back up for later use
+                return DataSource<EntriesResponse>(
+                    value: entriesResponse,
+                    origin: dataSource.origin
+                )
+            }
+            .mapError { error in
+                if let decodingError = error as? DecodingError {
+                    return NetworkError.decodingError(decodingError)
+                }
+                return NetworkError.invalidResponse
+            }
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    handleError(error)
+                }
+            }, receiveValue: { dataSource in
+                let entriesResponse = dataSource.value
+                
                 // Load more pages, or set us to stop loading
                 if (entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
                     Task {
-                        await self.fetchData(withPagination: pagination.next())
+                        self.fetchData(withPagination: pagination.next())
                     }
-                } else {
+                } else if dataSource.origin == .network {
                     self.isLoading = false
                 }
                 
@@ -116,20 +126,15 @@ class EntriesViewModel: ObservableObject {
                 } else {
                     self.entries += entriesResponse.items
                 }
-                self.groupedEntries = groupEntries(fromResponse: self.entries)
-            }
-        case .failure(let error):
-            DispatchQueue.main.sync {
-                self.isLoading = false
-                self.error = error.localizedDescription
-            }
-        }
+                self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
+            })
+            .store(in: &cancellables)
     }
     
     /**
      Groups and filters entries
      */
-    private func groupEntries(fromResponse entries: [Entry]) -> [GroupedEntries] {
+    private static func groupedEntries(fromResponse entries: [Entry]) -> [GroupedEntries] {
         let books = entries.filter { entry in
             if case .book(_) = entry {
                 return true

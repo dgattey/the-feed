@@ -53,17 +53,46 @@ struct ContentfulClient {
     }
     
     /**
-     Returns a publisher set up to handle errors for later use.
+     Fetches a cached response for a URL request from the cache and erases it to a publisher
+     */
+    private static func getCachedResponsePublisher(
+        forRequest request: URLRequest
+    ) -> AnyPublisher<DataSource<Data>, Error>? {
+        guard let cachedResponse = UrlCachedSessionManager.sharedCache.cachedResponse(for: request) else {
+            return nil
+        }
+        return Just(DataSource(value: cachedResponse.data, origin: .cache))
+            .setFailureType(to: Error.self)
+            .eraseToAnyPublisher()
+    }
+    
+    /**
+     Returns a data task publisher that pulls data from cache and network (reponses are merged together).
      */
     static func getDataTaskPublisher(
         forType type: ContentType,
         withPagination pagination: Pagination
-    ) -> AnyPublisher<Data, Error>? {
+    ) -> AnyPublisher<DataSource<Data>, Error>? {
         guard let url = getUrl(forType: type, withPagination: pagination) else {
             return nil
         }
-        return URLSession.shared.dataTaskPublisher(for: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadRevalidatingCacheData
+        
+        let networkCallPublisher = UrlCachedSessionManager.shared.dataTaskPublisher(for: request)
             .tryMap(NetworkError.handle)
+            .map { DataSource(value: $0, origin: .network) }
             .eraseToAnyPublisher()
+        
+        // If we had a cached response, return the merged publishers of both the cached response and non-cached
+        if let cachePublisher = getCachedResponsePublisher(forRequest: request) {
+            return cachePublisher
+                .merge(with: networkCallPublisher)
+                .eraseToAnyPublisher()
+        }
+        
+        // Otherwise just the network call
+        return networkCallPublisher
+        
     }
 }

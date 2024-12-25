@@ -11,7 +11,6 @@ import SwiftUI
  Shows the entries list or an error page. Responsible for initializing the view model and handling all errors.
  */
 struct EntriesSplitView: View {
-    @State private var selectedItem: Entry? = nil
     @StateObject private var viewModel = EntriesViewModel()
     
     var body: some View {
@@ -20,9 +19,7 @@ struct EntriesSplitView: View {
                 ErrorView(error: error)
             } else {
                 NavigationSplitView {
-                    VStack {
-                        entriesList
-                    }
+                    entriesList
                 } detail: {
                     entryDetail
                 }
@@ -30,13 +27,13 @@ struct EntriesSplitView: View {
         }
         .onAppear {
             Task {
-                await viewModel.fetchData()
+                viewModel.fetchData()
             }
         }
     }
     
     private var entriesList: some View {
-        List(selection: $selectedItem) {
+        List(selection: $viewModel.selectedEntry) {
             ForEach(viewModel.filteredGroupedEntries) { group in
                 EntriesListSectionView(group: Binding(
                     get: { group },
@@ -52,10 +49,8 @@ struct EntriesSplitView: View {
             }
             noSearchResults
         }
-        .disabled(viewModel.isLoading)
         .refreshable {
-            selectedItem = nil
-            await viewModel.fetchData()
+            viewModel.fetchData()
         }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
@@ -80,11 +75,13 @@ struct EntriesSplitView: View {
         )
         .toolbar { toolbarContent }
         .toolbar(removing: .sidebarToggle)
-        .onKeyPress(.escape) {
-            selectedItem = nil
-            return .handled
-        }
         #endif
+        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
+            viewModel.fetchData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
+            viewModel.selectedEntry = nil
+        }
     }
     
     /**
@@ -112,12 +109,12 @@ struct EntriesSplitView: View {
      */
     private var entryDetail: some View {
         Group {
-            if let unwrappedItem = selectedItem {
+            if let unwrappedItem = viewModel.selectedEntry {
                 EntryDetailView(entry: Binding(
                     get: { unwrappedItem },
                     set: { newValue in
                         // Update selectedItem with the new value
-                        selectedItem = newValue
+                        viewModel.selectedEntry = newValue
                     }
                 ))
             } else {
@@ -137,8 +134,7 @@ struct EntriesSplitView: View {
             ToolbarItem {
                 Button(action: {
                     Task {
-                        selectedItem = nil
-                        await viewModel.fetchData()
+                        viewModel.fetchData()
                     }
                 }) {
                     if viewModel.isLoading {
