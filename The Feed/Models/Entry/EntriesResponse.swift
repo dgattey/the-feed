@@ -12,13 +12,23 @@ import Foundation
  */
 struct EntriesResponse: Codable {
     let items: [Entry]
+    let limit: Int
+    let total: Int
+    let skip: Int
     
     enum CodingKeys: String, CodingKey, Hashable {
         case items
+        case limit
+        case total
+        case skip
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        limit = try container.decode(Int.self, forKey: .limit)
+        total = try container.decode(Int.self, forKey: .total)
+        skip = try container.decode(Int.self, forKey: .skip)
+        
         var itemsArray: [Entry] = []
         var ignoredTypes = Set<String>()
         

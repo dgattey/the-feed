@@ -52,7 +52,11 @@ struct EntriesSplitView: View {
             }
             noSearchResults
         }
-        .refreshable { await viewModel.fetchData() }
+        .disabled(viewModel.isLoading)
+        .refreshable {
+            selectedItem = nil
+            await viewModel.fetchData()
+        }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
         #if os(iOS)
@@ -133,6 +137,7 @@ struct EntriesSplitView: View {
             ToolbarItem {
                 Button(action: {
                     Task {
+                        selectedItem = nil
                         await viewModel.fetchData()
                     }
                 }) {

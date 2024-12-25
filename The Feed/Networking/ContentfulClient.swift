@@ -34,7 +34,10 @@ struct ContentfulClient {
     /**
      Forms the full URL using any associated objects as needed
      */
-    private static func getUrl(forType type: ContentType) -> URL? {
+    private static func getUrl(
+        forType type: ContentType,
+        withPagination pagination: Pagination
+    ) -> URL? {
         guard let baseUrl = baseApiUrl else {
             return nil
         }
@@ -43,7 +46,8 @@ struct ContentfulClient {
             return baseUrl
                 .appendingPathComponent(type.rawValue)
                 .appending(queryItems: [
-                    .init(name: "limit", value: "1000") // todo: @dgattey eventually remove this and do real pagination
+                    URLQueryItem(name: "limit", value: "\(pagination.limit)"),
+                    URLQueryItem(name: "skip", value: "\(pagination.skip)")
                 ])
         }
     }
@@ -52,9 +56,10 @@ struct ContentfulClient {
      Returns a publisher set up to handle errors for later use.
      */
     static func getDataTaskPublisher(
-        forType type: ContentType
+        forType type: ContentType,
+        withPagination pagination: Pagination
     ) -> AnyPublisher<Data, Error>? {
-        guard let url = getUrl(forType: type) else {
+        guard let url = getUrl(forType: type, withPagination: pagination) else {
             return nil
         }
         return URLSession.shared.dataTaskPublisher(for: url)

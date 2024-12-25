@@ -10,8 +10,7 @@ import Combine
 import SwiftUI
 
 /**
- Fetches and parses all entries for the entire list of entries. Pagination not built in, will limit to first 100 items.
- TODO: @dgattey build pagination
+ Fetches and parses all entries for the entire list of entries. Pagination built in and will automatically load all subsequent pages until we have no more entries left to load.
  */
 class EntriesViewModel: ObservableObject {
     @Published var groupedEntries: [GroupedEntries] = []
@@ -58,14 +57,20 @@ class EntriesViewModel: ObservableObject {
         return entries.filter { $0.contains(searchText: searchText, withCategories: selectedTokens) }
     }
     
-    func fetchData() async {
+    /**
+     Fetches data with optional limit/skip
+     */
+    func fetchData(withPagination pagination: Pagination = .default) async {
         DispatchQueue.main.sync {
             isLoading = true
         }
         
         // Create a promise to handle the async operation
         let result: Result<EntriesResponse, NetworkError> = await withCheckedContinuation { continuation in
-            guard let publisher = ContentfulClient.getDataTaskPublisher(forType: .entries) else {
+            guard let publisher = ContentfulClient.getDataTaskPublisher(
+                forType: .entries,
+                withPagination: pagination
+            ) else {
                 continuation.resume(returning: .failure(.invalidResponse))
                 return
             }
@@ -96,9 +101,22 @@ class EntriesViewModel: ObservableObject {
         switch result {
         case .success(let entriesResponse):
             DispatchQueue.main.sync {
-                self.isLoading = false
-                self.entries = entriesResponse.items
-                self.groupedEntries = groupEntries(fromResponse: entriesResponse)
+                // Load more pages, or set us to stop loading
+                if (entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
+                    Task {
+                        await self.fetchData(withPagination: pagination.next())
+                    }
+                } else {
+                    self.isLoading = false
+                }
+                
+                // Update entries depending on our current skip and then set grouped from it
+                if (entriesResponse.skip == 0) {
+                    self.entries = entriesResponse.items
+                } else {
+                    self.entries += entriesResponse.items
+                }
+                self.groupedEntries = groupEntries(fromResponse: self.entries)
             }
         case .failure(let error):
             DispatchQueue.main.sync {
@@ -111,14 +129,14 @@ class EntriesViewModel: ObservableObject {
     /**
      Groups and filters entries
      */
-    private func groupEntries(fromResponse entries: EntriesResponse) -> [GroupedEntries] {
-        let books = entries.items.filter { entry in
+    private func groupEntries(fromResponse entries: [Entry]) -> [GroupedEntries] {
+        let books = entries.filter { entry in
             if case .book(_) = entry {
                 return true
             }
             return false
         }
-        let locations = entries.items.filter { entry in
+        let locations = entries.filter { entry in
             if case .location(_) = entry {
                 return true
             }
