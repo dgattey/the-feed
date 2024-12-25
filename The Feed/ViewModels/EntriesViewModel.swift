@@ -72,7 +72,7 @@ class EntriesViewModel: ObservableObject {
             self.error = error.localizedDescription
         }
         
-        guard let publisher = ContentfulClient.getDataTaskPublisher(
+        guard let publisher = NetworkManager.getDataTaskPublisher(
             forType: .entries,
             withPagination: pagination
         ) else {

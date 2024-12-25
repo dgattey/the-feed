@@ -74,7 +74,6 @@ struct EntriesSplitView: View {
             token: { Text($0.rawValue) }
         )
         .toolbar { toolbarContent }
-        .toolbar(removing: .sidebarToggle)
         #endif
         .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
             viewModel.fetchData()

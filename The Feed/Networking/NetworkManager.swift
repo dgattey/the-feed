@@ -1,5 +1,5 @@
 //
-//  ContentfulClient.swift
+//  NetworkManager.swift
 //  The Feed
 //
 //  Created by Dylan Gattey on 12/22/24.
@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-struct ContentfulClient {
+struct NetworkManager {
     /**
      All the routes for the content we'd like to load
      */

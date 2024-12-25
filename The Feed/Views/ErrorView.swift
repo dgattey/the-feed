@@ -12,13 +12,34 @@ import SwiftUI
  */
 struct ErrorView: View {
     let error: String
+    @State private var copied: Bool = false
     
     var body: some View {
-        Section {
-            Text("Error")
-                .font(.title)
-                .foregroundColor(.red)
-            Text(error)
+        VStack(spacing: 32) {
+            VStack(spacing: 16) {
+                Text("Error")
+                    .font(.title)
+                    .foregroundColor(.red)
+                Text(error)
+                    .textSelection(.enabled)
+            }
+            Button {
+                #if os(iOS)
+                UIPasteboard.general.string = error
+                #else
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setString(error, forType: .string)
+                #endif
+                copied.toggle()
+            } label: {
+                if (copied) {
+                    Label("Copied error!", systemImage: "checkmark.circle")
+                } else {
+                    Text("Copy error to clipboard")
+                }
+            }
+            .controlSize(.extraLarge)
         }
         .padding()
         .frame(maxWidth: 400)
