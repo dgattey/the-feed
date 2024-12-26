@@ -146,6 +146,9 @@ class EntriesViewModel: ObservableObject {
                         return category == .book
                     case .location:
                         return category == .location
+                    case .textBlock:
+                        return category == .textBlock
+                    }
                 }
                 return GroupedEntries(category: category, entries: filteredEntries)
             }

@@ -31,11 +31,13 @@ protocol ConcreteEntry: SearchableEntry, Identifiable {
 enum Entry: SearchableEntry, Identifiable {
     case book(Book)
     case location(Location)
+    case textBlock(TextBlock)
     
     var id: String {
         switch self {
         case .book(let book): return book.id
         case .location(let location): return location.id
+        case .textBlock(let textBlock): return textBlock.id
         }
     }
     
@@ -43,6 +45,7 @@ enum Entry: SearchableEntry, Identifiable {
         switch self {
         case .book: return .book
         case .location: return .location
+        case .textBlock: return .textBlock
         }
     }
     
@@ -57,6 +60,7 @@ enum Entry: SearchableEntry, Identifiable {
         switch (self) {
         case .book(let book): return book.contains(searchText: searchText)
         case .location(let location): return location.contains(searchText: searchText)
+        case .textBlock(let textBlock): return textBlock.contains(searchText: searchText)
         }
     }
     
@@ -84,6 +88,9 @@ enum Entry: SearchableEntry, Identifiable {
         case "location":
             let location = try Location(from: decoder)
             self = .location(location)
+        case "textBlock":
+            let textBlock = try TextBlock(from: decoder)
+            self = .textBlock(textBlock)
         default:
             throw EntryTypeIgnoredError(ignoredType: type)
         }
@@ -96,6 +103,8 @@ enum Entry: SearchableEntry, Identifiable {
             try container.encode(book)
         case .location(let location):
             try container.encode(location)
+        case .textBlock(let textBlock):
+            try container.encode(textBlock)
         }
     }
     

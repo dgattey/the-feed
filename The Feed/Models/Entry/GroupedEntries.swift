@@ -9,6 +9,7 @@ enum GroupedEntriesCategory: String, CaseIterable, SearchableEntry, Identifiable
     case all = "All"
     case book = "Books"
     case location = "Locations"
+    case textBlock = "Text blocks"
     
     var id: String { rawValue }
     func contains(searchText: String) -> Bool {

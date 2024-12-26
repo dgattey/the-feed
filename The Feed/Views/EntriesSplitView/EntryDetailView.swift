@@ -19,6 +19,8 @@ struct EntryDetailView: View {
             BookDetailView(book: book)
         case .location(let location):
             LocationDetailView(location: location)
+        case .textBlock(let textBlock):
+            TextBlockDetailView(textBlock: textBlock)
         }
     }
 }

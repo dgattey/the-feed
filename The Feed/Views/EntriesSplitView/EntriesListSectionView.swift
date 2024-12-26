@@ -35,6 +35,8 @@ private struct EntriesListItemView: View {
                 BookListItemView(book: book)
             case .location(let location):
                 LocationListItemView(location: location)
+            case .textBlock(let textBlock):
+                TextBlockListItemView(textBlock: textBlock)
             }
         }
     }
