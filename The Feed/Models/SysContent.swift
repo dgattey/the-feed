@@ -11,6 +11,7 @@ struct SysContent: Codable, Hashable {
     let id: String
     let updatedAt: Date
     let createdAt: Date
+    let fieldStatus: String?
     
     enum CodingKeys: String, CodingKey {
         case sys
@@ -20,6 +21,11 @@ struct SysContent: Codable, Hashable {
         case id
         case updatedAt
         case createdAt
+        case fieldStatus
+    }
+    
+    enum FieldStatusKeys: String, CodingKey {
+        case all = "*"
     }
     
     static var dateFormatter: ISO8601DateFormatter {
@@ -37,6 +43,14 @@ struct SysContent: Codable, Hashable {
         updatedAt = SysContent.dateFormatter.date(from: updatedAtString)!
         let createdAtString = try sysContainer.decode(String.self, forKey: .createdAt)
         createdAt = SysContent.dateFormatter.date(from: createdAtString)!
+        
+        let fieldStatusContainerOrNil = try? sysContainer.nestedContainer(keyedBy: FieldStatusKeys.self, forKey: .fieldStatus)
+        if let fieldStatusContainer = fieldStatusContainerOrNil {
+            let allFieldStatusContainer = try fieldStatusContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .all)
+            fieldStatus = try allFieldStatusContainer.decode(String.self, forKey: .locale)
+        } else {
+            fieldStatus = nil
+        }
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -46,5 +60,11 @@ struct SysContent: Codable, Hashable {
         try sysContainer.encode(id, forKey: .id)
         try sysContainer.encode(updatedAt, forKey: .updatedAt)
         try sysContainer.encode(createdAt, forKey: .createdAt)
+        
+        if let fieldStatus = self.fieldStatus {
+            var fieldStatusContainer = sysContainer.nestedContainer(keyedBy: FieldStatusKeys.self, forKey: .fieldStatus)
+            var allFieldStatusContainer = fieldStatusContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .all)
+            try allFieldStatusContainer.encode(fieldStatus, forKey: .locale)
+        }
     }
 }

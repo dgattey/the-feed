@@ -15,7 +15,8 @@ struct Book: ConcreteEntry {
     let title: String
     let author: String
     let readDate: Date
-    // TODO: @dgattey handle description and coverImage too (more complex objects)
+    let description: TextNode
+    // TODO: @dgattey handle coverImage
     
     var id: String {
         return sysContent.id
@@ -43,6 +44,7 @@ struct Book: ConcreteEntry {
         case title
         case author
         case readDate
+        case description
     }
     
     init(from decoder: any Decoder) throws {
@@ -60,6 +62,10 @@ struct Book: ConcreteEntry {
         let readDateContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDate)
         let readDateString = try readDateContainer.decode(String.self, forKey: .locale)
         readDate = Book.dateFormatter.date(from: readDateString)!
+        
+        let descriptionContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
+        description = try descriptionContainer.decode(TextNode.self, forKey: .locale)
+        
     }
     
     func encode(to encoder: any Encoder) throws {

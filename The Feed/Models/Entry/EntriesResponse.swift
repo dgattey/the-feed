@@ -34,6 +34,8 @@ struct EntriesResponse: Codable, Hashable {
         
         // Decode the array of entries
         var entriesContainer = try container.nestedUnkeyedContainer(forKey: .items)
+        let entryCount = entriesContainer.count ?? 0
+        var ignoredCount = 0
         
         // Iterate through each entry and attempt to decode it, letting non-unknown types error
         while !entriesContainer.isAtEnd {
@@ -42,12 +44,17 @@ struct EntriesResponse: Codable, Hashable {
                 itemsArray.append(entry)
             } catch let error as EntryTypeIgnoredError {
                 ignoredTypes.insert(error.ignoredType)
+                ignoredCount += 1
                 _ = try? entriesContainer.decode(EmptyDecodable.self)
                 continue
             }
         }
-        if(ignoredTypes.count > 0) {
-            print ("Ignored \(ignoredTypes.count) entry types when decoding network response: \(ignoredTypes)")
+        
+        // Print out how many we ignored and what the distinct types were
+        if(ignoredTypes.count > 0 && _isDebugAssertConfiguration()) {
+            print(
+                "Ignored \(ignoredCount)/\(entryCount) entries (\(ignoredTypes.count) distinct entry types: \(ignoredTypes.joined(separator: ", ")))"
+            )
         }
         
         self.items = itemsArray

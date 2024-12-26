@@ -68,6 +68,9 @@ class EntriesViewModel: ObservableObject {
         func handleError(_ error: NetworkError) {
             self.isLoading = false
             self.error = error.localizedDescription
+            if (_isDebugAssertConfiguration()) {
+                print("Hit error: \(error)")
+            }
         }
         
         guard let publisher = NetworkManager.getDataTaskPublisher(

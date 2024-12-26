@@ -81,6 +81,12 @@ struct NetworkManager {
         
         let networkCallPublisher = UrlCachedSessionManager.shared.dataTaskPublisher(for: request)
             .tryMap(NetworkError.handle)
+            .map { data in
+                if (_isDebugAssertConfiguration()) {
+                    data.prettyPrintJSON()
+                }
+                return data
+            }
             .map { DataSource(value: $0, origin: .network) }
             .eraseToAnyPublisher()
         
