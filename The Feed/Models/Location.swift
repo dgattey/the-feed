@@ -16,7 +16,7 @@ struct Location: ConcreteEntry {
     let slug: String
     let point: LatLong
     let zoomLevels: [String]
-    // TODO: @dgattey handle image
+    let image: AssetLink
     
     var id: String {
         return sysContent.id
@@ -39,6 +39,7 @@ struct Location: ConcreteEntry {
         case slug
         case point
         case zoomLevels
+        case image
     }
     
     init(from decoder: any Decoder) throws {
@@ -58,6 +59,9 @@ struct Location: ConcreteEntry {
         
         let zoomLevelsContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .zoomLevels)
         zoomLevels = try zoomLevelsContainer.decode([String].self, forKey: .locale)
+        
+        let imageContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .image)
+        image = try imageContainer.decode(AssetLink.self, forKey: .locale)
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -80,5 +84,8 @@ struct Location: ConcreteEntry {
         
         var zoomLevelsContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .zoomLevels)
         try zoomLevelsContainer.encode(zoomLevels, forKey: .locale)
+        
+        var imageContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .image)
+        try imageContainer.encode(image, forKey: .locale)
     }
 }
