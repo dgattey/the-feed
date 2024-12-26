@@ -5,7 +5,7 @@
 //  Created by Dylan Gattey on 12/23/24.
 //
 
-enum GroupedEntriesCategory: String, CaseIterable, SearchableEntry {
+enum GroupedEntriesCategory: String, CaseIterable, SearchableEntry, Identifiable {
     case all = "All"
     case book = "Books"
     case location = "Locations"

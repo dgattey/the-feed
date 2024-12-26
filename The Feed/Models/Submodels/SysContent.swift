@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SysContent: Codable, Hashable {
+struct SysContent: Codable, Hashable, SearchableEntry {
     let id: String
     let updatedAt: Date
     let createdAt: Date
@@ -66,5 +66,12 @@ struct SysContent: Codable, Hashable {
             var allFieldStatusContainer = fieldStatusContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .all)
             try allFieldStatusContainer.encode(fieldStatus, forKey: .locale)
         }
+    }
+    
+    func contains(searchText: String) -> Bool {
+        return fieldStatus?.localizedCaseInsensitiveContains(searchText) ?? false
+        || id.localizedCaseInsensitiveContains(searchText)
+        || updatedAt.description.localizedCaseInsensitiveContains(searchText)
+        || createdAt.description.localizedCaseInsensitiveContains(searchText)
     }
 }

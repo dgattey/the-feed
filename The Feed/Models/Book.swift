@@ -37,7 +37,11 @@ struct Book: ConcreteEntry {
     }
     
     func contains(searchText: String) -> Bool {
-        return title.localizedCaseInsensitiveContains(searchText) || author.localizedCaseInsensitiveContains(searchText)
+        return title.localizedCaseInsensitiveContains(searchText)
+        || author.localizedCaseInsensitiveContains(searchText)
+        || readDate.description.localizedCaseInsensitiveContains(searchText)
+        || description.contains(searchText: searchText)
+        || sysContent.contains(searchText: searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {

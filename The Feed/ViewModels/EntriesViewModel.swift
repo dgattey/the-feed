@@ -133,24 +133,21 @@ class EntriesViewModel: ObservableObject {
     }
     
     /**
-     Groups and filters entries
+     Groups and filters entries - by default uses all entries from `GroupedEntriesCategory` except `.all` and orders them the same way
      */
     private static func groupedEntries(fromResponse entries: [Entry]) -> [GroupedEntries] {
-        let books = entries.filter { entry in
-            if case .book(_) = entry {
-                return true
+        GroupedEntriesCategory
+            .allCases
+            .filter { $0 != .all }
+            .map { category in
+                let filteredEntries = entries.filter { entry in
+                    switch entry {
+                    case .book:
+                        return category == .book
+                    case .location:
+                        return category == .location
+                }
+                return GroupedEntries(category: category, entries: filteredEntries)
             }
-            return false
-        }
-        let locations = entries.filter { entry in
-            if case .location(_) = entry {
-                return true
-            }
-            return false
-        }
-        return [
-            GroupedEntries(category: .book, entries: books),
-            GroupedEntries(category: .location, entries: locations)
-        ]
     }
 }
