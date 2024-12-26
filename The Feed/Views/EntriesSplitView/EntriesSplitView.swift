@@ -32,6 +32,10 @@ struct EntriesSplitView: View {
                 viewModel.fetchData()
             }
         }
+        .onKeyPress(.escape) {
+            selectedEntry = nil
+            return .handled
+        }
     }
     
     private var entriesList: some View {
