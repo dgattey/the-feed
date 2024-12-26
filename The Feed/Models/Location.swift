@@ -12,12 +12,11 @@ import Foundation
  */
 struct Location: ConcreteEntry {
     let sysContent: SysContent
-    let initialZoom: Float
+    let initialZoom: Double
     let slug: String
-    // TODO: @dgattey handle these too
-    //    let image: String
-    //    let point: LatLong
-    //    let zoomLevels: [Float]
+    let point: LatLong
+    let zoomLevels: [String]
+    // TODO: @dgattey handle image
     
     var id: String {
         return sysContent.id
@@ -38,6 +37,8 @@ struct Location: ConcreteEntry {
     enum FieldsCodingKeys: String, CodingKey {
         case initialZoom
         case slug
+        case point
+        case zoomLevels
     }
     
     init(from decoder: any Decoder) throws {
@@ -47,10 +48,16 @@ struct Location: ConcreteEntry {
         let fieldsContainer = try container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
         
         let initialZoomContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .initialZoom)
-        initialZoom = try initialZoomContainer.decode(Float.self, forKey: .locale)
+        initialZoom = try initialZoomContainer.decode(Double.self, forKey: .locale)
         
         let slugContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .slug)
         slug = try slugContainer.decode(String.self, forKey: .locale)
+        
+        let pointContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .point)
+        point = try pointContainer.decode(LatLong.self, forKey: .locale)
+        
+        let zoomLevelsContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .zoomLevels)
+        zoomLevels = try zoomLevelsContainer.decode([String].self, forKey: .locale)
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -67,5 +74,11 @@ struct Location: ConcreteEntry {
             forKey: .slug
         )
         try slugContainer.encode(slug, forKey: .locale)
+        
+        var pointContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .point)
+        try pointContainer.encode(point, forKey: .locale)
+        
+        var zoomLevelsContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .zoomLevels)
+        try zoomLevelsContainer.encode(zoomLevels, forKey: .locale)
     }
 }
