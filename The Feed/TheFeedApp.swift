@@ -6,14 +6,40 @@
 //
 
 import SwiftUI
+import Combine
 
 @main
 struct TheFeedApp: App {
+    @State private var cancellables = Set<AnyCancellable>()
+    
     var body: some Scene {
         WindowGroup {
             EntriesSplitView()
-        }.commands {
+                .onAppear {
+                    setUpRefreshOnWindowActive()
+                }
+                .onDisappear {
+                    cancellables.removeAll()
+                }
+        }
+        .commands {
             MenuBarCommands()
         }
+    }
+    
+    /**
+     Sets up a notification publish of the refresh data notification when the window newly becomes active/key
+     */
+    func setUpRefreshOnWindowActive() {
+        guard let window = NSApplication.shared.windows.first else {
+            return
+        }
+        
+        // Trigger a refresh when the window newly becomes active
+        NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification, object: window)
+            .sink { _ in
+                NotificationCenter.default.post(name: .refreshData, object: nil)
+            }
+            .store(in: &cancellables)
     }
 }

@@ -43,7 +43,7 @@ enum NetworkError: Error, LocalizedError {
                 return "Decoding error: \(type) mismatch: \(context.underlyingError?.localizedDescription ?? context.debugDescription)"
             case .keyNotFound(let key, let context):
                 return "Decoding error: \(key) not found: \(context.underlyingError?.localizedDescription ?? context.debugDescription)"
-            default:
+            @unknown default:
                 return "Decoding error: \(error.localizedDescription)"
             }
         case .invalidResponse:

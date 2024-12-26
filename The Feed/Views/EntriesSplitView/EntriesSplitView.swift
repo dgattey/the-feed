@@ -21,6 +21,7 @@ struct EntriesSplitView: View {
             } else {
                 NavigationSplitView {
                     entriesList
+                        .navigationSplitViewColumnWidth(min: 200, ideal: 300)
                 } detail: {
                     entryDetail
                 }
