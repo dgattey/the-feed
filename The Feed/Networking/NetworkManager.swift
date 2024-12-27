@@ -14,6 +14,7 @@ struct NetworkManager {
      */
     enum ContentType {
         case entries
+        case asset(assetId: String)
     }
 
     /**
@@ -46,6 +47,10 @@ struct NetworkManager {
             URLQueryItem(name: "skip", value: "\(pagination.skip)")
         ])
         switch type {
+        case .asset(let assetId):
+            return url
+                .appendingPathComponent("assets")
+                .appendingPathComponent(assetId)
         case .entries:
             return urlWithPagination
                 .appendingPathComponent("entries")
