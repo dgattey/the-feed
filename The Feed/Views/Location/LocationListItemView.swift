@@ -12,7 +12,7 @@ struct LocationListItemView: View {
     
     var body: some View {
         VStack {
-            Text(location.slug).font(.headline)
+            Text(location.title).font(.headline)
         }
     }
 }

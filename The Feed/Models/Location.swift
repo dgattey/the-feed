@@ -13,6 +13,7 @@ import Foundation
 struct Location: ConcreteEntry {
     let sysContent: SysContent
     let initialZoom: Double
+    let title: String
     let slug: String
     let point: LatLong
     let zoomLevels: [String]
@@ -32,10 +33,14 @@ struct Location: ConcreteEntry {
     
     func contains(searchText: String) -> Bool {
         return slug.localizedCaseInsensitiveContains(searchText)
+        || title.localizedCaseInsensitiveContains(searchText)
+        || zoomLevels.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
+        || sysContent.contains(searchText: searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {
         case initialZoom
+        case title
         case slug
         case point
         case zoomLevels
@@ -47,6 +52,9 @@ struct Location: ConcreteEntry {
         sysContent = try SysContent(from: decoder)
         
         let fieldsContainer = try container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
+        
+        let titleContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .title)
+        title = try titleContainer.decode(String.self, forKey: .locale)
         
         let initialZoomContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .initialZoom)
         initialZoom = try initialZoomContainer.decode(Double.self, forKey: .locale)
@@ -69,6 +77,9 @@ struct Location: ConcreteEntry {
         try sysContent.encode(to: encoder)
         
         var fieldsContainer = container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
+        
+        var titleCOntainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .title)
+        try titleCOntainer.encode(title, forKey: .locale)
         
         var initialZoomContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .initialZoom)
         try initialZoomContainer.encode(initialZoom, forKey: .locale)

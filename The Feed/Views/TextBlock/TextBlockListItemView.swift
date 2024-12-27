@@ -12,7 +12,7 @@ struct TextBlockListItemView: View {
     
     var body: some View {
         VStack {
-            Text(textBlock.slug).font(.headline)
+            Text(textBlock.title).font(.headline)
         }
     }
 }

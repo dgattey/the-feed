@@ -37,6 +37,13 @@ struct EntriesSplitView: View {
             selectedEntry = nil
             return .handled
         }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
+            selectedEntry = nil
+            viewModel.fetchData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
+            selectedEntry = nil
+        }
     }
     
     private var entriesList: some View {
@@ -83,13 +90,6 @@ struct EntriesSplitView: View {
         )
         .toolbar { toolbarContent }
         #endif
-        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
-            selectedEntry = nil
-            viewModel.fetchData()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
-            selectedEntry = nil
-        }
     }
     
     /**

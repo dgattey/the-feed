@@ -62,6 +62,9 @@ struct NetworkManager {
         guard let cachedResponse = UrlCachedSessionManager.sharedCache.cachedResponse(for: request) else {
             return nil
         }
+        if (_isDebugAssertConfiguration()) {
+            cachedResponse.data.prettyPrintJSON()
+        }
         return Just(DataSource(value: cachedResponse.data, origin: .cache))
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()

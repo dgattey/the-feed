@@ -12,6 +12,7 @@ import Foundation
  */
 struct TextBlock: ConcreteEntry {
     let sysContent: SysContent
+    let title: String
     let slug: String
     let content: TextNode
     
@@ -31,9 +32,11 @@ struct TextBlock: ConcreteEntry {
         return slug.localizedCaseInsensitiveContains(searchText)
         || content.contains(searchText: searchText)
         || sysContent.contains(searchText: searchText)
+        || title.localizedCaseInsensitiveContains(searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {
+        case title
         case slug
         case content
     }
@@ -43,6 +46,9 @@ struct TextBlock: ConcreteEntry {
         sysContent = try SysContent(from: decoder)
         
         let fieldsContainer = try container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
+        
+        let titleContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .title)
+        title = try titleContainer.decode(String.self, forKey: .locale)
         
         let slugContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .slug)
         slug = try slugContainer.decode(String.self, forKey: .locale)
@@ -56,6 +62,9 @@ struct TextBlock: ConcreteEntry {
         try sysContent.encode(to: encoder)
         
         var fieldsContainer = container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
+        
+        var titleContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .title)
+        try titleContainer.encode(title, forKey: .locale)
         
         var slugContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .slug)
         try slugContainer.encode(slug, forKey: .locale)

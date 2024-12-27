@@ -66,6 +66,9 @@ class EntriesViewModel: ObservableObject {
         }
         
         func handleError(_ error: NetworkError) {
+            if case .invalidCachedData = error {
+                return // we just let the network version of the call succeed here
+            }
             self.isLoading = false
             self.error = error.localizedDescription
             if (_isDebugAssertConfiguration()) {
@@ -87,13 +90,20 @@ class EntriesViewModel: ObservableObject {
             .tryMap { dataSource -> DataSource<EntriesResponse> in
                 let decoder = JSONDecoder()
                 let data = dataSource.value
-                let entriesResponse = try decoder.decode(EntriesResponse.self, from: data)
-                
-                // Wrap it back up for later use
-                return DataSource<EntriesResponse>(
-                    value: entriesResponse,
-                    origin: dataSource.origin
-                )
+                do {
+                    let entriesResponse = try decoder.decode(EntriesResponse.self, from: data)
+                    
+                    // Wrap it back up for later use
+                    return DataSource<EntriesResponse>(
+                        value: entriesResponse,
+                        origin: dataSource.origin
+                    )
+                } catch {
+                    if (dataSource.origin == .cache) {
+                        throw NetworkError.invalidCachedData
+                    }
+                    throw error
+                }
             }
             .mapError { error in
                 if let decodingError = error as? DecodingError {
