@@ -1,6 +1,11 @@
-# The Feed
-
-This is an iOS app set up to fetch the latest data from my Contentful DB and display it for viewing and editing. Basically just an overengineered way to play with Swift.
+<div align="center">
+    <picture>
+      <img alt="Logo" src="https://github.com/user-attachments/assets/7954f15d-f730-47f8-a114-cc87a964e131" height="256">
+    </picture>
+  <h1>The Feed</h1>
+This is an iOS app set up to fetch the latest data from my Contentful database that powers my website and display it for viewing and editing. Centered around the books and shows I've recently watched. It's a native Swift app.
+</div>
+  
 
 ## Architecture
 
