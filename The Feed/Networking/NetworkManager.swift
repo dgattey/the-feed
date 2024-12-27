@@ -12,14 +12,14 @@ struct NetworkManager {
     /**
      All the routes for the content we'd like to load
      */
-    enum ContentType: String {
-         case entries
+    enum ContentType {
+        case entries
     }
 
     /**
      Create a file with a struct called Secrets if this is erroring. We use two secrets to construct a base API URL from [Contentful's space url](https://app.contentful.com/spaces) and a [personal access token from CMA tokens](https://app.contentful.com/account/profile/cma_tokens).
      */
-    private static var baseApiUrl: URL? {
+    private static var urlOrNil: URL? {
         let spaceId = Secrets.contentfulSpaceId
         let baseApiRoute = "https://api.contentful.com/spaces/\(spaceId)/environments/main/"
         guard let baseApiUrl = URL(string: baseApiRoute) else {
@@ -38,17 +38,18 @@ struct NetworkManager {
         forType type: ContentType,
         withPagination pagination: Pagination
     ) -> URL? {
-        guard let baseUrl = baseApiUrl else {
+        guard let url = urlOrNil else {
             return nil
         }
+        let urlWithPagination = url.appending(queryItems: [
+            URLQueryItem(name: "limit", value: "\(pagination.limit)"),
+            URLQueryItem(name: "skip", value: "\(pagination.skip)")
+        ])
         switch type {
         case .entries:
-            return baseUrl
-                .appendingPathComponent(type.rawValue)
-                .appending(queryItems: [
-                    URLQueryItem(name: "limit", value: "\(pagination.limit)"),
-                    URLQueryItem(name: "skip", value: "\(pagination.skip)")
-                ])
+            return urlWithPagination
+                .appendingPathComponent("entries")
+                
         }
     }
     

@@ -56,6 +56,9 @@ enum NetworkError: Error, LocalizedError {
      */
     static func handle(output: URLSession.DataTaskPublisher.Output) throws -> Data {
         guard let httpResponse = output.response as? HTTPURLResponse else {
+            if (_isDebugAssertConfiguration()) {
+                print("Output.response invalid: \(output.response)")
+            }
             throw NetworkError.invalidResponse
         }
         
@@ -88,6 +91,9 @@ enum NetworkError: Error, LocalizedError {
                 throw NetworkError.serverError("Server error with status code \(httpResponse.statusCode).")
             }
         default:
+            if (_isDebugAssertConfiguration()) {
+                print("Unknown status code \(httpResponse.statusCode). Throwing invalid error")
+            }
             throw NetworkError.invalidResponse
         }
     }

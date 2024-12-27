@@ -99,6 +99,9 @@ class EntriesViewModel: ObservableObject {
                 if let decodingError = error as? DecodingError {
                     return NetworkError.decodingError(decodingError)
                 }
+                if (_isDebugAssertConfiguration()) {
+                    print("Map error - \(error)")
+                }
                 return NetworkError.invalidResponse
             }
             .receive(on: DispatchQueue.main)

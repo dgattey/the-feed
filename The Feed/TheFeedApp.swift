@@ -28,9 +28,10 @@ struct TheFeedApp: App {
     }
     
     /**
-     Sets up a notification publish of the refresh data notification when the window newly becomes active/key
+     Sets up a notification publish of the refresh data notification when the window newly becomes active/key. Only usable on macOS.
      */
     func setUpRefreshOnWindowActive() {
+        #if os(macOS)
         guard let window = NSApplication.shared.windows.first else {
             return
         }
@@ -41,5 +42,6 @@ struct TheFeedApp: App {
                 NotificationCenter.default.post(name: .refreshData, object: nil)
             }
             .store(in: &cancellables)
+        #endif
     }
 }
