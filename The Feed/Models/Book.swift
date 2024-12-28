@@ -14,9 +14,12 @@ struct Book: ConcreteEntry {
     let sysContent: SysContent
     let title: String
     let author: String
-    let readDate: Date
-    let description: TextNode
+    let isbn: Int?
+    let readDateStarted: Date?
+    let readDateFinished: Date
+    let reviewDescription: TextNode
     let coverImage: AssetLink
+    let rating: Int?
     
     var id: String {
         return sysContent.id
@@ -39,17 +42,23 @@ struct Book: ConcreteEntry {
     func contains(searchText: String) -> Bool {
         return title.localizedCaseInsensitiveContains(searchText)
         || author.localizedCaseInsensitiveContains(searchText)
-        || readDate.description.localizedCaseInsensitiveContains(searchText)
-        || description.contains(searchText: searchText)
+        || String(describing: isbn).localizedCaseInsensitiveContains(searchText)
+        || readDateStarted?.description.localizedCaseInsensitiveContains(searchText) ?? false
+        || readDateFinished.description.localizedCaseInsensitiveContains(searchText)
+        || reviewDescription.contains(searchText: searchText)
         || sysContent.contains(searchText: searchText)
+        || String(describing: rating).localizedCaseInsensitiveContains(searchText)
     }
     
     enum FieldsCodingKeys: String, CodingKey {
         case title
         case author
-        case readDate
-        case description
+        case isbn
+        case readDateStarted
+        case readDateFinished
+        case reviewDescription
         case coverImage
+        case rating
     }
     
     init(from decoder: any Decoder) throws {
@@ -64,15 +73,37 @@ struct Book: ConcreteEntry {
         let authorContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .author)
         author = try authorContainer.decode(String.self, forKey: .locale)
         
-        let readDateContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDate)
-        let readDateString = try readDateContainer.decode(String.self, forKey: .locale)
-        readDate = Book.dateFormatter.date(from: readDateString)!
+        let isbnContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .isbn)
+        if let isbnContainer = isbnContainerOrNil {
+            isbn = try isbnContainer.decode(Int.self, forKey: .locale)
+        } else {
+            isbn = nil
+        }
         
-        let descriptionContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
-        description = try descriptionContainer.decode(TextNode.self, forKey: .locale)
+        let readDateFinishedContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
+        let readDateFinishedString = try readDateFinishedContainer.decode(String.self, forKey: .locale)
+        readDateFinished = Book.dateFormatter.date(from: readDateFinishedString)!
+        
+        let readDateStartedContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateStarted)
+        if let readDateStartedContainer = readDateStartedContainerOrNil {
+            let readDateStartedString = try readDateStartedContainer.decode(String.self, forKey: .locale)
+            readDateStarted = Book.dateFormatter.date(from: readDateStartedString)!
+        } else {
+            readDateStarted = nil
+        }
+        
+        let reviewDescriptionContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
+        reviewDescription = try reviewDescriptionContainer.decode(TextNode.self, forKey: .locale)
         
         let coverImageContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .coverImage)
         coverImage = try coverImageContainer.decode(AssetLink.self, forKey: .locale)
+        
+        let ratingContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .rating)
+        if let ratingContainer = ratingContainerOrNil {
+            rating = try ratingContainer.decode(Int.self, forKey: .locale)
+        } else {
+            rating = nil
+        }
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -87,11 +118,30 @@ struct Book: ConcreteEntry {
         var authorContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .author)
         try authorContainer.encode(author, forKey: .locale)
         
-        var readDateContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDate)
-        let readDateString = Book.dateFormatter.string(from: readDate)
-        try readDateContainer.encode(readDateString, forKey: .locale)
+        if let isbn = isbn {
+            var isbnContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .isbn)
+            try isbnContainer.encode(isbn, forKey: .locale)
+        }
+        
+        if let readDateStarted = readDateStarted {
+            var readDateStartedContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateStarted)
+            let readDateStartedString = Book.dateFormatter.string(from: readDateStarted)
+            try readDateStartedContainer.encode(readDateStartedString, forKey: .locale)
+        }
+        
+        var readDateFinishedContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
+        let readDateFinishedString = Book.dateFormatter.string(from: readDateFinished)
+        try readDateFinishedContainer.encode(readDateFinishedString, forKey: .locale)
         
         var coverImageContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .coverImage)
         try coverImageContainer.encode(coverImage, forKey: .locale)
+        
+        var reviewDescriptionContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
+        try reviewDescriptionContainer.encode(reviewDescription, forKey: .locale)
+        
+        if let rating = rating {
+            var ratingContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .rating)
+            try ratingContainer.encode(rating, forKey: .locale)
+        }
     }
 }
