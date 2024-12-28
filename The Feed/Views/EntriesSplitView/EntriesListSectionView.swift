@@ -19,6 +19,11 @@ struct EntriesListSectionView: View {
                 EntriesListItemView(entry: $entry)
             }
         }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        #if os(iOS)
+        .listSectionSpacing(.custom(24))
+        #endif
     }
 }
 
@@ -39,5 +44,6 @@ private struct EntriesListItemView: View {
                 TextBlockListItemView(textBlock: textBlock)
             }
         }
+        .listRowBackground(Color.clear)
     }
 }

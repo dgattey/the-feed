@@ -21,6 +21,13 @@ struct TheFeedApp: App {
                 .onDisappear {
                     cancellables.removeAll()
                 }
+            #if os(macOS)
+                .didMoveToWindow { window in
+                    window.isOpaque = false
+                    window.backgroundColor = NSColor(Color.background.opacity(0.2))
+                }
+                .background(.ultraThinMaterial)
+            #endif
         }
         .commands {
             MenuBarCommands()
