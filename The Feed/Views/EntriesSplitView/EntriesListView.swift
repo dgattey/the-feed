@@ -36,7 +36,6 @@ struct EntriesListView: View {
         }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
-        .toolbarBackground(Color.clear, for: .automatic)
 #if os(iOS)
         .searchable(
             text: $viewModel.searchText,
@@ -64,6 +63,7 @@ struct EntriesListView: View {
             token: { Text($0.rawValue) }
         )
         .toolbar { toolbarContent }
+        .toolbarBackground(Color.clear, for: .windowToolbar)
 #endif
     }
     

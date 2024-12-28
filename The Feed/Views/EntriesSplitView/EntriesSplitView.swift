@@ -24,6 +24,7 @@ struct EntriesSplitView: View {
                         .navigationSplitViewColumnWidth(min: 200, ideal: 300)
                 } detail: {
                     entryDetail
+                        .navigationSplitViewColumnWidth(min: 300, ideal: 600)
                 }
                 .background(Color.clear)
             }
@@ -53,6 +54,17 @@ struct EntriesSplitView: View {
     private var entryDetail: some View {
         ZStack {
             Color.background.opacity(0.5).ignoresSafeArea()
+            
+            #if os(macOS)
+            // Add a background to the title bar on mac
+            VStack(spacing: 0) {
+                Color.background.opacity(0.25).ignoresSafeArea().frame(height: 39)
+                Rectangle().fill(.separator).frame(height: 0.5)
+                Spacer()
+            }
+            .padding(.top, -39)
+            #endif
+            
             if let unwrappedItem = selectedEntry {
                 EntryDetailView(entry: Binding(
                     get: { unwrappedItem },
