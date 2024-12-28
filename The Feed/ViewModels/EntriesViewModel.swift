@@ -66,9 +66,6 @@ class EntriesViewModel: ObservableObject {
         }
         
         func handleError(_ error: NetworkError) {
-            if case .invalidCachedData = error {
-                return // we just let the network version of the call succeed here
-            }
             self.isLoading = false
             self.error = error.localizedDescription
             if (_isDebugAssertConfiguration()) {
@@ -100,7 +97,11 @@ class EntriesViewModel: ObservableObject {
                     )
                 } catch {
                     if (dataSource.origin == .cache) {
-                        throw NetworkError.invalidCachedData
+                        // Empty data if we have a problem with cached data
+                        return DataSource<EntriesResponse>(
+                            value: EntriesResponse(),
+                            origin: .cache
+                        )
                     }
                     throw error
                 }
@@ -126,7 +127,7 @@ class EntriesViewModel: ObservableObject {
                 let entriesResponse = dataSource.value
                 
                 // Load more pages, or set us to stop loading
-                if (entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
+                if (entriesResponse.total > 0 && entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
                     Task {
                         self.fetchData(withPagination: pagination.next())
                     }

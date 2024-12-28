@@ -23,6 +23,16 @@ struct EntriesResponse: Codable, Hashable {
         case skip
     }
     
+    /**
+     Blank content for use when erroring and needing a fallback
+     */
+    init() {
+        items = []
+        limit = 0
+        total = 0
+        skip = 0
+    }
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         limit = try container.decode(Int.self, forKey: .limit)

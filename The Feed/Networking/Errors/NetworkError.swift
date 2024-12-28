@@ -22,8 +22,6 @@ enum NetworkError: Error, LocalizedError {
     case decodingError(DecodingError)
     // Malformed data/response
     case invalidResponse
-    // We couldn't work with cached data
-    case invalidCachedData
     
     var localizedDescription: String {
         switch self {
@@ -50,8 +48,6 @@ enum NetworkError: Error, LocalizedError {
             }
         case .invalidResponse:
             return "Invalid response from server"
-        case .invalidCachedData:
-            return "Invalid cached data"
         }
     }
     
