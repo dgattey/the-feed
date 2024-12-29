@@ -10,7 +10,7 @@ import Foundation
 /**
  The network response for Entries has "items" for entries.
  */
-struct EntriesResponse: Codable, Hashable {
+struct EntriesResponse: EmptyCreatable {
     let items: [Entry]
     let limit: Int
     let total: Int

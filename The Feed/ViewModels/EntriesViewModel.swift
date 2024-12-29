@@ -12,19 +12,15 @@ import SwiftUI
 /**
  Fetches and parses all entries for the entire list of entries. Pagination built in and will automatically load all subsequent pages until we have no more entries left to load.
  */
-class EntriesViewModel: ObservableObject {
+class EntriesViewModel: ViewModel {
     @Published var groupedEntries: [GroupedEntries] = []
     @Published var entries: [Entry] = []
-    @Published var isLoading = false
-    @Published var error: String?
     @Published var searchText: String = ""
     @Published var selectedTokens: [GroupedEntriesCategory] = []
     @Published var suggestedTokens = GroupedEntriesCategory.allCases.filter { category in
         // Remove all case
         return category != GroupedEntriesCategory.all
     }
-    
-    private var cancellables = Set<AnyCancellable>()
     
     var filteredGroupedEntries: [GroupedEntries] {
         guard !searchText.isEmpty else {
@@ -61,89 +57,30 @@ class EntriesViewModel: ObservableObject {
      Fetches data with optional limit/skip
      */
     func fetchData(withPagination pagination: Pagination = .default) {
-        DispatchQueue.main.async {
-            self.isLoading = true
-        }
-        
-        func handleError(_ error: NetworkError) {
-            self.isLoading = false
-            self.error = error.localizedDescription
-            if (_isDebugAssertConfiguration()) {
-                print("Hit error: \(error)")
-            }
-        }
-        
-        guard let publisher = NetworkManager.getDataTaskPublisher(
+        let publisher = NetworkManager.getDataTaskPublisher(
             forType: .entries,
             withPagination: pagination
-        ) else {
-            DispatchQueue.main.sync {
-                handleError(.invalidResponse)
+        )
+        super.fetchData(publisher) { dataSource in
+            let entriesResponse: EntriesResponse = dataSource.value
+            
+            // Load more pages, or set us to stop loading
+            if (entriesResponse.total > 0 && entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
+                Task {
+                    self.fetchData(withPagination: pagination.next())
+                }
+            } else if dataSource.origin == .network {
+                self.isLoading = false
             }
-            return
+            
+            // Update entries depending on our current skip and then set grouped from it
+            if (entriesResponse.skip == 0) {
+                self.entries = entriesResponse.items
+            } else {
+                self.entries += entriesResponse.items
+            }
+            self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
         }
-        
-        publisher
-            .tryMap { dataSource -> DataSource<EntriesResponse> in
-                let decoder = JSONDecoder()
-                let data = dataSource.value
-                do {
-                    let entriesResponse = try decoder.decode(EntriesResponse.self, from: data)
-                    
-                    // Wrap it back up for later use
-                    return DataSource<EntriesResponse>(
-                        value: entriesResponse,
-                        origin: dataSource.origin
-                    )
-                } catch {
-                    if (dataSource.origin == .cache) {
-                        // Empty data if we have a problem with cached data
-                        return DataSource<EntriesResponse>(
-                            value: EntriesResponse(),
-                            origin: .cache
-                        )
-                    }
-                    throw error
-                }
-            }
-            .mapError { error in
-                if let decodingError = error as? DecodingError {
-                    return NetworkError.decodingError(decodingError)
-                }
-                if (_isDebugAssertConfiguration()) {
-                    print("Map error - \(error)")
-                }
-                return NetworkError.invalidResponse
-            }
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { completion in
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    handleError(error)
-                }
-            }, receiveValue: { dataSource in
-                let entriesResponse = dataSource.value
-                
-                // Load more pages, or set us to stop loading
-                if (entriesResponse.total > 0 && entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {
-                    Task {
-                        self.fetchData(withPagination: pagination.next())
-                    }
-                } else if dataSource.origin == .network {
-                    self.isLoading = false
-                }
-                
-                // Update entries depending on our current skip and then set grouped from it
-                if (entriesResponse.skip == 0) {
-                    self.entries = entriesResponse.items
-                } else {
-                    self.entries += entriesResponse.items
-                }
-                self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
-            })
-            .store(in: &cancellables)
     }
     
     /**
