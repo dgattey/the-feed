@@ -61,8 +61,8 @@ class EntriesViewModel: ViewModel {
             forType: .entries,
             withPagination: pagination
         )
-        super.fetchData(publisher) { dataSource in
-            let entriesResponse: EntriesResponse = dataSource.value
+        fetchData(publisher) { dataSource in
+            let entriesResponse: Entries = dataSource.value
             
             // Load more pages, or set us to stop loading
             if (entriesResponse.total > 0 && entriesResponse.limit + entriesResponse.skip < entriesResponse.total) {

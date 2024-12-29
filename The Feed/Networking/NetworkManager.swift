@@ -15,6 +15,7 @@ struct NetworkManager {
     enum ContentType {
         case entries
         case asset(assetId: String)
+        case url(_ urlString: String)
     }
 
     /**
@@ -54,7 +55,8 @@ struct NetworkManager {
         case .entries:
             return urlWithPagination
                 .appendingPathComponent("entries")
-                
+        case .url(let urlString):
+            return URL(string: urlString)
         }
     }
     
@@ -62,15 +64,20 @@ struct NetworkManager {
      Fetches a cached response for a URL request from the cache and erases it to a publisher
      */
     private static func getCachedResponsePublisher(
-        forRequest request: URLRequest
+        forRequest request: URLRequest,
+        printDebugInfo: Bool
     ) -> AnyPublisher<DataSource<Data>, Error>? {
-        guard let cachedResponse = UrlCachedSessionManager.sharedCache.cachedResponse(for: request) else {
+        guard let cachedResponse = CacheManager.shared.cachedResponse(for: request) else {
             return nil
         }
-        if (_isDebugAssertConfiguration()) {
-            cachedResponse.data.prettyPrintJSON()
+        let data = cachedResponse.data
+        if (_isDebugAssertConfiguration() && printDebugInfo) {
+            print(
+                "Cache call for \(request.url?.absoluteString ?? "???") responded with \(data.count) bytes"
+            )
+            print(data.prettyJsonString() ?? data)
         }
-        return Just(DataSource(value: cachedResponse.data, origin: .cache))
+        return Just(DataSource(value: data, origin: .cache))
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
     }
@@ -80,7 +87,9 @@ struct NetworkManager {
      */
     static func getDataTaskPublisher(
         forType type: ContentType,
-        withPagination pagination: Pagination
+        withPagination pagination: Pagination = .default,
+        printDebugInfo: Bool = false,
+        disableCache: Bool = false
     ) -> AnyPublisher<DataSource<Data>, Error>? {
         guard let url = getUrl(forType: type, withPagination: pagination) else {
             return nil
@@ -88,11 +97,14 @@ struct NetworkManager {
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadRevalidatingCacheData
         
-        let networkCallPublisher = UrlCachedSessionManager.shared.dataTaskPublisher(for: request)
+        let networkCallPublisher = URLSession.shared.dataTaskPublisher(for: request)
             .tryMap(NetworkError.handle)
             .map { data in
-                if (_isDebugAssertConfiguration()) {
-                    data.prettyPrintJSON()
+                if (_isDebugAssertConfiguration() && printDebugInfo) {
+                    print(
+                        "Network call for \(url.relativeString) responded with \(data.count) bytes"
+                    )
+                    print(data.prettyJsonString() ?? data)
                 }
                 return data
             }
@@ -100,7 +112,10 @@ struct NetworkManager {
             .eraseToAnyPublisher()
         
         // If we had a cached response, return the merged publishers of both the cached response and non-cached
-        if let cachePublisher = getCachedResponsePublisher(forRequest: request) {
+        if !disableCache, let cachePublisher = getCachedResponsePublisher(
+            forRequest: request,
+            printDebugInfo: printDebugInfo
+        ) {
             return cachePublisher
                 .merge(with: networkCallPublisher)
                 .eraseToAnyPublisher()

@@ -11,19 +11,15 @@ extension Data {
     /**
      Allows for easier debugging!
      */
-    func prettyPrintJSON() {
+    func prettyJsonString() -> String? {
         guard let object = try? JSONSerialization.jsonObject(with: self) else {
-            print("Could not create JSON object from data")
-            return
+            return nil
         }
         
         guard let serializedData = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]) else {
-            print("Could not serialize JSON data")
-            return
+            return nil
         }
         
-        if let prettyJSONString = String(data: serializedData, encoding: .utf8) {
-            print(prettyJSONString)
-        }
+        return String(data: serializedData, encoding: .utf8)
     }
 }

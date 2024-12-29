@@ -8,7 +8,7 @@
 /**
  Encapsulates a rich text node that has other content inside or a single value - it's self-referential, though there are certain rules like only one `document` type at the top level. Either content or value will be set, not both, and definitely one of them.
  */
-struct TextNode: Equatable, Codable, Hashable, SearchableEntry {
+struct TextNode: SearchableModel {
     let content: [TextNode]?
     let value: String?
     let nodeType: NodeType
@@ -24,7 +24,7 @@ struct TextNode: Equatable, Codable, Hashable, SearchableEntry {
     }
 }
 
-struct TextNodeData: Equatable, Codable, Hashable, SearchableEntry {
+struct TextNodeData: SearchableModel {
     let uri: String?
     
     func contains(searchText: String) -> Bool {
@@ -32,7 +32,7 @@ struct TextNodeData: Equatable, Codable, Hashable, SearchableEntry {
     }
 }
 
-enum NodeType: String, Equatable, Codable, Hashable, SearchableEntry {
+enum NodeType: String, SearchableModel {
     case blockquote
     case document
     case heading1 = "heading-1"
@@ -54,7 +54,7 @@ enum NodeType: String, Equatable, Codable, Hashable, SearchableEntry {
     }
 }
 
-struct Mark: Equatable, Codable, Hashable, SearchableEntry {
+struct Mark: SearchableModel {
     let type: MarkType
     
     func contains(searchText: String) -> Bool {
@@ -62,7 +62,7 @@ struct Mark: Equatable, Codable, Hashable, SearchableEntry {
     }
 }
 
-enum MarkType: String, Equatable, Codable, Hashable, SearchableEntry {
+enum MarkType: String, SearchableModel {
     case bold
     case italic
     case underline

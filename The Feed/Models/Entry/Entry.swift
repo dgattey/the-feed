@@ -8,27 +8,9 @@
 import Foundation
 
 /**
- An entry or entry wrapper that is searchable and identifiable
+ Contains all possible types of content, with enum cases for each. This _would_ be a `ContentfulModel`, but this is basically just a wrapper model that has inside it an actual `ContentfulModel`
  */
-protocol SearchableEntry: Codable, Hashable {
-    func contains(searchText: String) -> Bool
-}
-
-/**
- The `Entry` enum is a container type wrapping a concrete instance. Every concrete instance should implement this.
- */
-protocol ConcreteEntry: SearchableEntry, Identifiable {
-    var updatedAt: Date { get }
-    var createdAt: Date { get }
-    var sysContent: SysContent { get }
-}
-
-/**
- Contains all possible types of content, with enum cases for each.
- // TODO: @dgattey implement rest: these depend on sys.contentType.sys.id - if textBlock, we have slug and content, each with en-us entries inside, with content, for example. if location we have initialZoom, slug, image, point, zoomLevels. if project we have layout, thumbnail, creationDate, title, link, type, description.
-
- */
-enum Entry: SearchableEntry, Identifiable {
+enum Entry: SearchableModel & IdentifiableModel {
     case book(Book)
     case location(Location)
     case textBlock(TextBlock)

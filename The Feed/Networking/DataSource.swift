@@ -7,12 +7,12 @@
 
 import Foundation
 
-enum DataOrigin: String, Codable, Hashable, Equatable, CaseIterable {
+enum DataOrigin: String, CaseIterable, Model {
     case cache
     case network
 }
 
-struct DataSource<T: Codable & Equatable & Hashable>: Codable, Hashable, Equatable {
+struct DataSource<T: Codable & Equatable & Hashable>: Model {
     let value: T
     let origin: DataOrigin
 }

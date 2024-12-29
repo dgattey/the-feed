@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct LatLong: Codable, Hashable {
+struct LatLong: Model {
     let lat: Double
     let lon: Double
 }

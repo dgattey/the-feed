@@ -21,7 +21,7 @@ class ViewModel: ObservableObject {
     /**
      Call to handle any network error and update the models with it
      */
-    func handleError(_ error: NetworkError) {
+    private func handleError(_ error: NetworkError) {
         self.isLoading = false
         self.error = error.localizedDescription
         if (_isDebugAssertConfiguration()) {
@@ -32,7 +32,7 @@ class ViewModel: ObservableObject {
     /**
      Fetches data with error handling and decoding built in via generics
      */
-    func fetchData<ResponseType: EmptyCreatable>(
+    func fetchData<ResponseType: EmptyCreatableModel>(
         _ publisher:  AnyPublisher<DataSource<Data>, any Error>?,
         receiveValue: @escaping (DataSource<ResponseType>) -> Void
     ) {

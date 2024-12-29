@@ -1,5 +1,5 @@
 //
-//  EntriesResponse.swift
+//  Entries.swift
 //  The Feed
 //
 //  Created by Dylan Gattey on 12/23/24.
@@ -8,36 +8,25 @@
 import Foundation
 
 /**
- The network response for Entries has "items" for entries.
+ Contains a list of entries that are decoded one by one and any invalid ones are skipped.
  */
-struct EntriesResponse: EmptyCreatable {
+class Entries: PaginatedResponse {
     let items: [Entry]
-    let limit: Int
-    let total: Int
-    let skip: Int
     
-    enum CodingKeys: String, CodingKey, Hashable {
+    enum CodingKeys: String, CodingKey, Model {
         case items
-        case limit
-        case total
-        case skip
     }
     
     /**
      Blank content for use when erroring and needing a fallback
      */
-    init() {
+    required init() {
         items = []
-        limit = 0
-        total = 0
-        skip = 0
+        super.init()
     }
     
-    init(from decoder: Decoder) throws {
+    required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        limit = try container.decode(Int.self, forKey: .limit)
-        total = try container.decode(Int.self, forKey: .total)
-        skip = try container.decode(Int.self, forKey: .skip)
         
         var itemsArray: [Entry] = []
         var ignoredTypes = Set<String>()
@@ -55,7 +44,7 @@ struct EntriesResponse: EmptyCreatable {
             } catch let error as EntryTypeIgnoredError {
                 ignoredTypes.insert(error.ignoredType)
                 ignoredCount += 1
-                _ = try? entriesContainer.decode(EmptyDecodable.self)
+                _ = try? entriesContainer.decode(EmptyModel.self)
                 continue
             }
         }
@@ -68,5 +57,16 @@ struct EntriesResponse: EmptyCreatable {
         }
         
         self.items = itemsArray
+        try super.init(from: decoder)
+    }
+    
+    static func == (lhs: Entries, rhs: Entries) -> Bool {
+        let paginatedEqual = lhs.limit == rhs.limit && lhs.total == rhs.total && lhs.skip == rhs.skip
+        return paginatedEqual && lhs.items == rhs.items
+    }
+    
+    override func hash(into hasher: inout Hasher) {
+        super.hash(into: &hasher)
+        hasher.combine(items)
     }
 }

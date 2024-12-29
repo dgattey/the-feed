@@ -10,7 +10,7 @@ import Foundation
 /**
  A Contentful-powered location model, with reformatted data for ease of use when working with it locally
  */
-struct Location: ConcreteEntry {
+struct Location: ContentfulModel {
     let sysContent: SysContent
     let initialZoom: Double
     let title: String
@@ -21,14 +21,6 @@ struct Location: ConcreteEntry {
     
     var id: String {
         return sysContent.id
-    }
-    
-    var updatedAt: Date {
-        return sysContent.updatedAt
-    }
-    
-    var createdAt: Date {
-        return sysContent.createdAt
     }
     
     func contains(searchText: String) -> Bool {

@@ -8,7 +8,7 @@
 /**
  A generic server error that can be used to pull out messages/etc from a raw network response
  */
-struct ServerError: Codable {
+struct ServerError: Model {
     let message: String
     let code: String?
 }

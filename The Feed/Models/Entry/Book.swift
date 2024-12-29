@@ -10,7 +10,7 @@ import Foundation
 /**
  A Contentful-powered book model, with reformatted data for ease of use when working with it locally
  */
-struct Book: ConcreteEntry {
+struct Book: ContentfulModel {
     let sysContent: SysContent
     let title: String
     let author: String
@@ -23,14 +23,6 @@ struct Book: ConcreteEntry {
     
     var id: String {
         return sysContent.id
-    }
-    
-    var updatedAt: Date {
-        return sysContent.updatedAt
-    }
-    
-    var createdAt: Date {
-        return sysContent.createdAt
     }
     
     private static var dateFormatter: DateFormatter {

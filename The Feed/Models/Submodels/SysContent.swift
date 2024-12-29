@@ -7,11 +7,22 @@
 
 import Foundation
 
-struct SysContent: Codable, Hashable, SearchableEntry {
+struct SysContent: IdentifiableModel & SearchableModel & EmptyCreatableModel {
     let id: String
-    let updatedAt: Date
-    let createdAt: Date
+    let linkType: String?
+    let type: String
+    let updatedAt: Date?
+    let createdAt: Date?
     let fieldStatus: String?
+    
+    init() {
+        id = ""
+        linkType = nil
+        type = ""
+        updatedAt = nil
+        createdAt = nil
+        fieldStatus = nil
+    }
     
     enum CodingKeys: String, CodingKey {
         case sys
@@ -19,6 +30,8 @@ struct SysContent: Codable, Hashable, SearchableEntry {
     
     enum SysCodingKeys: String, CodingKey {
         case id
+        case linkType
+        case type
         case updatedAt
         case createdAt
         case fieldStatus
@@ -38,11 +51,22 @@ struct SysContent: Codable, Hashable, SearchableEntry {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let sysContainer = try container.nestedContainer(keyedBy: SysCodingKeys.self, forKey: .sys)
+        
         id = try sysContainer.decode(String.self, forKey: .id)
-        let updatedAtString = try sysContainer.decode(String.self, forKey: .updatedAt)
-        updatedAt = SysContent.dateFormatter.date(from: updatedAtString)!
-        let createdAtString = try sysContainer.decode(String.self, forKey: .createdAt)
-        createdAt = SysContent.dateFormatter.date(from: createdAtString)!
+        linkType = try? sysContainer.decode(String.self, forKey: .linkType)
+        type = try sysContainer.decode(String.self, forKey: .type)
+        
+        if let updatedAtString = try? sysContainer.decode(String.self, forKey: .updatedAt) {
+            updatedAt = SysContent.dateFormatter.date(from: updatedAtString)!
+        } else {
+            updatedAt = nil
+        }
+        
+        if let createdAtString = try? sysContainer.decode(String.self, forKey: .createdAt) {
+            createdAt = SysContent.dateFormatter.date(from: createdAtString)!
+        } else {
+            createdAt = nil
+        }
         
         let fieldStatusContainerOrNil = try? sysContainer.nestedContainer(keyedBy: FieldStatusKeys.self, forKey: .fieldStatus)
         if let fieldStatusContainer = fieldStatusContainerOrNil {
@@ -58,6 +82,8 @@ struct SysContent: Codable, Hashable, SearchableEntry {
         
         var sysContainer = container.nestedContainer(keyedBy: SysCodingKeys.self, forKey: .sys)
         try sysContainer.encode(id, forKey: .id)
+        try sysContainer.encode(linkType, forKey: .linkType)
+        try sysContainer.encode(type, forKey: .type)
         try sysContainer.encode(updatedAt, forKey: .updatedAt)
         try sysContainer.encode(createdAt, forKey: .createdAt)
         
@@ -71,7 +97,9 @@ struct SysContent: Codable, Hashable, SearchableEntry {
     func contains(searchText: String) -> Bool {
         return fieldStatus?.localizedCaseInsensitiveContains(searchText) ?? false
         || id.localizedCaseInsensitiveContains(searchText)
-        || updatedAt.description.localizedCaseInsensitiveContains(searchText)
-        || createdAt.description.localizedCaseInsensitiveContains(searchText)
+        || linkType?.localizedCaseInsensitiveContains(searchText) ?? false
+        || type.localizedCaseInsensitiveContains(searchText)
+        || updatedAt?.description.localizedCaseInsensitiveContains(searchText) ?? false
+        || createdAt?.description.localizedCaseInsensitiveContains(searchText) ?? false
     }
 }

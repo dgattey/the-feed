@@ -10,7 +10,7 @@ import Foundation
 /**
  A Contentful-powered TextBlock model, with reformatted data for ease of use when working with it locally
  */
-struct TextBlock: ConcreteEntry {
+struct TextBlock: ContentfulModel {
     let sysContent: SysContent
     let title: String
     let slug: String
@@ -18,14 +18,6 @@ struct TextBlock: ConcreteEntry {
     
     var id: String {
         return sysContent.id
-    }
-    
-    var updatedAt: Date {
-        return sysContent.updatedAt
-    }
-    
-    var createdAt: Date {
-        return sysContent.createdAt
     }
     
     func contains(searchText: String) -> Bool {
