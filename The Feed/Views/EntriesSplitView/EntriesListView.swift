@@ -10,29 +10,41 @@ import SwiftUI
 struct EntriesListView: View {
     @ObservedObject var viewModel: EntriesViewModel
     @Binding var selectedEntry: Entry?
+    @State var hoveredEntry: Entry?
     
     var body: some View {
-        List(selection: $selectedEntry) {
+        List() {
             ForEach(viewModel.filteredGroupedEntries) { group in
-                EntriesListSectionView(group: Binding(
-                    get: { group },
-                    set: { newGroup in
-                        let index = viewModel.groupedEntries.firstIndex(of: group)
-                        if let index {
-                            viewModel.groupedEntries[index] = newGroup
-                        } else {
-                            viewModel.groupedEntries.append(newGroup)
+                EntriesListSectionView(
+                    selectedEntry: $selectedEntry,
+                    hoveredEntry: $hoveredEntry,
+                    group: Binding(
+                        get: { group },
+                        set: { newGroup in
+                            let index = viewModel.groupedEntries.firstIndex(of: group)
+                            if let index {
+                                withAnimation {
+                                    viewModel.groupedEntries[index] = newGroup
+                                }
+                            } else {
+                                withAnimation {
+                                    viewModel.groupedEntries.append(newGroup)
+                                }
+                            }
                         }
-                    }
-                ))
+                    )
+                )
             }
+            
             noSearchResults
         }
         .scrollContentBackground(.hidden)
-        .background(Color.background.opacity(0.5))
+        .background(Color.backgroundGlass)
         .refreshable {
-            selectedEntry = nil
-            viewModel.fetchData()
+            withAnimation {
+                selectedEntry = nil
+                viewModel.fetchData()
+            }
         }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
@@ -62,6 +74,7 @@ struct EntriesListView: View {
             prompt: Text("Search your feed"),
             token: { Text($0.rawValue) }
         )
+        .listStyle(.sidebar)
         .toolbar { toolbarContent }
         .toolbarBackground(Color.clear, for: .windowToolbar)
 #endif
@@ -79,7 +92,7 @@ struct EntriesListView: View {
                     .font(.headline)
                     .foregroundColor(.gray)
                     .lineLimit(.max)
-                    .padding(.vertical)
+                    .padding(.vertical, 32)
 #if os(iOS)
                     .padding(.horizontal)
 #endif
@@ -100,16 +113,20 @@ struct EntriesListView: View {
             ToolbarItem {
                 Button(action: {
                     Task {
-                        selectedEntry = nil
-                        viewModel.fetchData()
+                        withAnimation {
+                            selectedEntry = nil
+                            viewModel.fetchData()
+                        }
                     }
                 }) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.accent)
-                            .controlSize(.small)
-                    } else {
-                        Label("", systemImage: "arrow.clockwise")
+                    Group {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.accent)
+                                .controlSize(.small)
+                        } else {
+                            Label("", systemImage: "arrow.clockwise")
+                        }
                     }
                 }
             }

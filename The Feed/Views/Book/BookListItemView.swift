@@ -7,27 +7,119 @@
 
 import SwiftUI
 
+/**
+ Shows a single book item for a list item view
+ TODO: @dgattey draft status, rating?
+ */
 struct BookListItemView: View {
     let book: Book
-    @ObservedObject private var assetViewModel: AssetViewModel
+    @Binding private var entry: Entry
+    @Binding private var state: EntriesListItemView.State
     
-    init(withBook book: Book) {
-        assetViewModel = AssetViewModel(book.coverImage)
+    @StateObject private var assetViewModel: AssetViewModel
+    private let scaleFactorOnHover: CGFloat = 1.02
+    
+    private var isSelected: Bool {
+        return state == .hoveredAndSelected || state == .selected
+    }
+    
+    private var isHovered: Bool {
+        return state == .hoveredAndSelected || state == .hovered
+    }
+    
+    /**
+     A slightly random number of degrees for rotation when hovered
+     */
+    private var degreesRotationOnHover: Double {
+        return Double(book.id.hashValue % 2) - 2
+    }
+    
+    init(with book: Book,
+         andWrappingEntry entry: Binding<Entry>,
+         _ state: Binding<EntriesListItemView.State>,
+         _ errorsViewModel: ErrorsViewModel
+    ) {
         self.book = book
+        _state = state
+        _entry = entry
+        _assetViewModel = StateObject(
+            wrappedValue:
+                AssetViewModel(book.coverImage, errorsViewModel: errorsViewModel))
     }
     
     var body: some View {
-        VStack {
-            if let error = assetViewModel.error {
-                Text("Error loading cover for \(book.title): \(error)")
-            } else {
-                HStack {
-                    Text(book.title).font(.headline)
-                }
+        mainContent
+        .onAppear {
+            if (
+                !book.coverImage.id.isEmpty &&
+                !assetViewModel.isLoading &&
+                (assetViewModel.asset == nil || assetViewModel.imageData == nil)
+            ) {
+                assetViewModel.fetchData()
             }
         }
-        .onAppear {
-            assetViewModel.fetchData()
+    }
+    
+    var mainContent: some View {
+        HStack(spacing: 12) {
+            imageWithProgress
+            VStack(alignment: .leading, spacing: 8) {
+                Text(book.title).font(.headline)
+                Text(book.author).font(.subheadline)
+                Group {
+                    if let readDateFinished = book.readDateFinished {
+                        Text("Finished on \(readDateFinished.formatted(date: .abbreviated, time: .omitted))")
+                    } else if let readDateStarted = book.readDateStarted {
+                        Text("Started reading on \(readDateStarted.formatted(date: .abbreviated, time: .omitted))")
+                    } else if let createdAt = book.sysContent.createdAt {
+                        Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
+                    }
+                }
+                .font(.subheadline)
+            }
+            .foregroundStyle(
+                isHovered || isSelected ? .accentForeground : .foreground
+            )
+            .padding(.leading, isHovered || isSelected ? 4 : 0)
         }
+    }
+    
+    var imageWithProgress: some View {
+        ZStack {
+            Color.background
+            if assetViewModel.isLoading && assetViewModel.imageData == nil {
+                ProgressView()
+            } else {
+#if os(macOS)
+                if let imageData = assetViewModel.imageData,
+                   let nsImage = NSImage(data: imageData) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipped()
+                } else {
+                    Image(systemName: "exclamationmark")
+                }
+#else
+                if let imageData = assetViewModel.imageData,
+                   let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipped()
+                } else {
+                    Image(systemName: "exclamationmark")
+                }
+#endif
+            }
+        }
+        .frame(width: 50, height: 75)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(.separator, lineWidth: 1)
+        )
+        .rotationEffect(isHovered && !isSelected ? .degrees(degreesRotationOnHover) : .zero)
+        .scaleEffect(isHovered && !isSelected ? scaleFactorOnHover : 1)
     }
 }

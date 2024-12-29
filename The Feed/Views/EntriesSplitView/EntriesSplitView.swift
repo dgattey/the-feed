@@ -34,22 +34,31 @@ struct EntriesSplitView: View {
                 ErrorsView(geometry: geometry)
             }
         }
+        .frame(minHeight: 200)
         .onAppear {
             Task {
+                withAnimation {
+                    selectedEntry = nil
+                    viewModel.fetchData()
+                }
+            }
+        }
+        .onKeyPress(.escape) {
+            withAnimation {
+                selectedEntry = nil
+            }
+            return .handled
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
+            withAnimation {
                 selectedEntry = nil
                 viewModel.fetchData()
             }
         }
-        .onKeyPress(.escape) {
-            selectedEntry = nil
-            return .handled
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
-            selectedEntry = nil
-            viewModel.fetchData()
-        }
         .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
-            selectedEntry = nil
+            withAnimation {
+                selectedEntry = nil
+            }
         }
     }
     
@@ -58,12 +67,10 @@ struct EntriesSplitView: View {
      */
     private var entryDetail: some View {
         ZStack {
-            Color.background.opacity(0.5).ignoresSafeArea()
-            
             #if os(macOS)
             // Add a background to the title bar on mac
             VStack(spacing: 0) {
-                Color.background.opacity(0.25).ignoresSafeArea().frame(height: 39)
+                Color.clear.ignoresSafeArea().frame(height: 39)
                 Rectangle().fill(.separator).frame(height: 0.5)
                 Spacer()
             }

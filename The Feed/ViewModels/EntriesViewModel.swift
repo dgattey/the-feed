@@ -74,12 +74,14 @@ class EntriesViewModel: ViewModel {
             }
             
             // Update entries depending on our current skip and then set grouped from it
-            if (entriesResponse.skip == 0) {
-                self.entries = entriesResponse.items
-            } else {
-                self.entries += entriesResponse.items
+            withAnimation {
+                if (entriesResponse.skip == 0) {
+                    self.entries = entriesResponse.items
+                } else {
+                    self.entries += entriesResponse.items
+                }
+                self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
             }
-            self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
         }
     }
     

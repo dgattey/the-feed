@@ -29,7 +29,7 @@ struct TheFeedApp: App {
             #if os(macOS)
                 .didMoveToWindow { window in
                     window.isOpaque = false
-                    window.backgroundColor = NSColor(Color.background.opacity(0.2))
+                    window.backgroundColor = NSColor(Color.clear)
                 }
                 .background(.ultraThinMaterial)
             #endif
