@@ -24,8 +24,10 @@ class ErrorsViewModel: ObservableObject {
     
     func reset() {
         DispatchQueue.main.async {
-            self.hasErrors = false
-            self.errors.removeAll()
+            withAnimation {
+                self.hasErrors = false
+                self.errors.removeAll()
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ import SwiftUI
 struct BookListItemView: View {
     let book: Book
     @Binding private var entry: Entry
-    @Binding private var state: EntriesListItemView.State
+    @Binding private var state: EntriesListItemView.ViewState
     
     @StateObject private var assetViewModel: AssetViewModel
     private let scaleFactorOnHover: CGFloat = 1.02
@@ -36,7 +36,7 @@ struct BookListItemView: View {
     
     init(with book: Book,
          andWrappingEntry entry: Binding<Entry>,
-         _ state: Binding<EntriesListItemView.State>,
+         _ state: Binding<EntriesListItemView.ViewState>,
          _ errorsViewModel: ErrorsViewModel
     ) {
         self.book = book

@@ -34,30 +34,13 @@ struct EntriesSplitView: View {
                 ErrorsView(geometry: geometry)
             }
         }
-        .frame(minHeight: 200).ignoresSafeArea()
+        .frame(minHeight: 200)
         .onAppear {
             Task {
                 withAnimation {
                     selectedEntry = nil
                     viewModel.fetchData()
                 }
-            }
-        }
-        .onKeyPress(.escape) {
-            withAnimation {
-                selectedEntry = nil
-            }
-            return .handled
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
-            withAnimation {
-                selectedEntry = nil
-                viewModel.fetchData()
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
-            withAnimation {
-                selectedEntry = nil
             }
         }
     }

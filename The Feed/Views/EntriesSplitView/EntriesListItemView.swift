@@ -20,14 +20,14 @@ struct EntriesListItemView: View {
     @Binding var hoveredEntry: Entry?
     @EnvironmentObject var errorsViewModel: ErrorsViewModel
     
-    enum State {
+    enum ViewState {
         case normal
         case hovered
         case selected
         case hoveredAndSelected
     }
     
-    private var state: State {
+    private var state: ViewState {
         switch (isHovered, isSelected) {
         case (true, true): return .hoveredAndSelected
         case (true, false): return .hovered
@@ -100,7 +100,8 @@ struct EntriesListItemView: View {
             .padding(.vertical, interItemSpacing)
             
             #if os(macOS)
-            CustomCursorView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            CustomCursorView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(-interItemSpacing)
             #endif
         }
@@ -112,11 +113,17 @@ struct EntriesListItemView: View {
             }
         }
         .onHover { isHovered in
-            withAnimation {
-                if (isHovered) {
+            if (isHovered && willHoverEntry == nil) {
+                willHoverEntry = entry
+                withAnimation {
                     hoveredEntry = entry
-                } else if hoveredEntry?.id == entry.id {
+                    willHoverEntry = nil
+                }
+            } else if hoveredEntry?.id == entry.id && willHoverEntry == nil {
+                willHoverEntry = hoveredEntry
+                withAnimation {
                     hoveredEntry = nil
+                    willHoverEntry = nil
                 }
             }
         }

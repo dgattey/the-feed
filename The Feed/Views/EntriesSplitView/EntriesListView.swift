@@ -38,13 +38,26 @@ struct EntriesListView: View {
             
             noSearchResults
         }
+        .onKeyPress(.escape) {
+            withAnimation {
+                selectedEntry = nil
+                hoveredEntry = nil
+            }
+            return .handled
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
+            resetAndFetch()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
+            withAnimation {
+                selectedEntry = nil
+                hoveredEntry = nil
+            }
+        }
         .scrollContentBackground(.hidden)
         .background(Color.backgroundGlass)
         .refreshable {
-            withAnimation {
-                selectedEntry = nil
-                viewModel.fetchData()
-            }
+            resetAndFetch()
         }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
@@ -113,10 +126,7 @@ struct EntriesListView: View {
             ToolbarItem {
                 Button(action: {
                     Task {
-                        withAnimation {
-                            selectedEntry = nil
-                            viewModel.fetchData()
-                        }
+                        resetAndFetch()
                     }
                 }) {
                     Group {
@@ -130,6 +140,17 @@ struct EntriesListView: View {
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     Animates a reset and fetch of new data, clearing current selection and hover preemptively
+     */
+    private func resetAndFetch() {
+        withAnimation {
+            selectedEntry = nil
+            hoveredEntry = nil
+            viewModel.fetchData()
         }
     }
 }
