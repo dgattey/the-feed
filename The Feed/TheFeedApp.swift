@@ -11,10 +11,15 @@ import Combine
 @main
 struct TheFeedApp: App {
     @State private var cancellables = Set<AnyCancellable>()
+    @StateObject var errorsViewModel = ErrorsViewModel()
     
     var body: some Scene {
         WindowGroup {
-            EntriesSplitView()
+            EntriesSplitView(errorsViewModel)
+                .foregroundStyle(Color.foreground)
+                .background(Color.backgroundGlass)
+            
+                .environmentObject(errorsViewModel)
                 .onAppear {
                     setUpRefreshOnWindowActive()
                 }

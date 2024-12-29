@@ -15,12 +15,13 @@ import SwiftUI
  */
 
 class AssetViewModel: ViewModel {
-    private var assetId: String
-    private var asset: Asset?
-    @Published var imageData: Data?
+    private let assetId: String
+    @Published private(set) var asset: Asset?
+    @Published private(set) var imageData: Data?
     
-    init(_ link: AssetLink) {
+    init(_ link: AssetLink, errorsViewModel: ErrorsViewModel) {
         self.assetId = link.id
+        super.init(errorsViewModel)
     }
     
     /**
@@ -32,8 +33,12 @@ class AssetViewModel: ViewModel {
         )
         fetchData(publisher) { dataSource in
             let asset: Asset = dataSource.value
-            self.asset = asset
-            self.fetchImage(asset)
+            if (self.asset == nil || self.asset?.id != asset.id) {
+                self.asset = asset
+                self.fetchImage(asset)
+            } else if dataSource.origin == .network {
+                self.isLoading = false
+            }
         }
     }
     
@@ -45,43 +50,15 @@ class AssetViewModel: ViewModel {
             forType: .url(
                 asset.file.url
                     .replacingOccurrences(of: "//", with: "https://")
-            ),
-            printDebugInfo: true,
-            disableCache: true
+            )
         )
         fetchData(publisher) { dataSource in
-            let image: ImageWrapper = dataSource.value
+            let justData: JustDataResponse = dataSource.value
+            self.imageData = justData.data
             
             if dataSource.origin == .network {
                 self.isLoading = false
             }
         }
-    }
-    
-    class ImageWrapper: EmptyCreatableModel {
-        let data: Data
-        
-        required init() {
-            data = Data()
-        }
-        
-        required init(from decoder: any Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            self.data = try container.decode(Data.self)
-        }
-        
-        func encode(to encoder: any Encoder) throws {
-            var container = encoder.singleValueContainer()
-            try container.encode(data)
-        }
-        
-        static func == (lhs: ImageWrapper, rhs: ImageWrapper) -> Bool {
-            return lhs.data == rhs.data
-        }
-        
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(data)
-        }
-        
     }
 }

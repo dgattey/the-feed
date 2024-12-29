@@ -15,6 +15,14 @@ struct TextNode: SearchableModel {
     let data: TextNodeData
     let marks: [Mark]?
     
+    init() {
+        content = nil
+        value = nil
+        nodeType = .document
+        data = TextNodeData(uri: nil)
+        marks = nil
+    }
+    
     func contains(searchText: String) -> Bool {
         return nodeType.contains(searchText: searchText)
         || data.contains(searchText: searchText)

@@ -10,7 +10,7 @@ import Foundation
 /**
  There are links to assets, like from the `coverImage` of a `Book` or related. It's just a stub to the actual content, which is not yet loaded as this item is used.
  */
-struct AssetLink: ContentfulModel {
+struct AssetLink: ContentfulModel & EmptyCreatableModel {
     let sysContent: SysContent
     
     var id: String {
@@ -19,6 +19,10 @@ struct AssetLink: ContentfulModel {
     
     enum CodingKeys: String, CodingKey {
         case sys
+    }
+    
+    init() {
+        sysContent = SysContent(id: "")
     }
     
     init(from decoder: any Decoder) throws {

@@ -26,6 +26,16 @@ class Entries: PaginatedResponse {
     }
     
     required init(from decoder: Decoder) throws {
+        guard let context = decoder.userInfo[JSONDecoder.contextKey] as? DecodingContext else {
+            throw DecodingError
+                .dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Missing JSONDecoder.contextKey \(decoder.userInfo)")
+                )
+        }
+        context.errorsViewModel.reset()
+            
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         var itemsArray: [Entry] = []
@@ -44,6 +54,10 @@ class Entries: PaginatedResponse {
             } catch let error as EntryTypeIgnoredError {
                 ignoredTypes.insert(error.ignoredType)
                 ignoredCount += 1
+                _ = try? entriesContainer.decode(EmptyModel.self)
+                continue
+            } catch let error as LocalizedError {
+                context.errorsViewModel.add(error)
                 _ = try? entriesContainer.decode(EmptyModel.self)
                 continue
             }

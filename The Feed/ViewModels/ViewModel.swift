@@ -14,7 +14,11 @@ import SwiftUI
  */
 class ViewModel: ObservableObject {
     @Published var isLoading = false
-    @Published var error: String?
+    private var errorsViewModel: ErrorsViewModel
+    
+    init(_ errorsViewModel: ErrorsViewModel) {
+        self.errorsViewModel = errorsViewModel
+    }
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -23,7 +27,7 @@ class ViewModel: ObservableObject {
      */
     private func handleError(_ error: NetworkError) {
         self.isLoading = false
-        self.error = error.localizedDescription
+        self.errorsViewModel.add(error)
         if (_isDebugAssertConfiguration()) {
             print("Hit error: \(error)")
         }
@@ -41,16 +45,28 @@ class ViewModel: ObservableObject {
         }
         
         guard let publisher = publisher else {
-            DispatchQueue.main.sync {
-                handleError(.invalidResponse)
+            DispatchQueue.main.async {
+                self.handleError(.invalidResponse)
             }
             return
         }
         
         publisher
             .tryMap { dataSource -> DataSource<ResponseType> in
-                let decoder = JSONDecoder()
                 let data = dataSource.value
+                if ResponseType.self == JustDataResponse.self {
+                    // No decoding necessary
+                    return DataSource<ResponseType>(
+                        value: JustDataResponse(data) as! ResponseType,
+                        origin: dataSource.origin
+                    )
+                }
+                
+                let decoder = JSONDecoder()
+                decoder
+                    .userInfo[JSONDecoder.contextKey] = DecodingContext(
+                        errorsViewModel: self.errorsViewModel
+                    )
                 do {
                     let response = try decoder.decode(ResponseType.self, from: data)
                     

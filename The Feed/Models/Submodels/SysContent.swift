@@ -16,7 +16,12 @@ struct SysContent: IdentifiableModel & SearchableModel & EmptyCreatableModel {
     let fieldStatus: String?
     
     init() {
-        id = ""
+        let id = String(describing: Date.now)
+        self.init(id: id)
+    }
+    
+    init(id: String = String(describing: Date.now)) {
+        self.id = id
         linkType = nil
         type = ""
         updatedAt = nil
@@ -99,7 +104,5 @@ struct SysContent: IdentifiableModel & SearchableModel & EmptyCreatableModel {
         || id.localizedCaseInsensitiveContains(searchText)
         || linkType?.localizedCaseInsensitiveContains(searchText) ?? false
         || type.localizedCaseInsensitiveContains(searchText)
-        || updatedAt?.description.localizedCaseInsensitiveContains(searchText) ?? false
-        || createdAt?.description.localizedCaseInsensitiveContains(searchText) ?? false
     }
 }

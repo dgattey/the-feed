@@ -11,14 +11,16 @@ import SwiftUI
  Shows the entries list or an error page. Responsible for initializing the view model and handling all errors.
  */
 struct EntriesSplitView: View {
-    @ObservedObject private var viewModel = EntriesViewModel()
+    @StateObject private var viewModel: EntriesViewModel
     @State private var selectedEntry: Entry? = nil
     
+    init(_ errorsViewModel: ErrorsViewModel) {
+        _viewModel = StateObject(wrappedValue: EntriesViewModel(errorsViewModel))
+    }
+    
     var body: some View {
-        VStack {
-            if let error = viewModel.error {
-                ErrorView(error: error)
-            } else {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
                 NavigationSplitView {
                     EntriesListView(viewModel: viewModel, selectedEntry: $selectedEntry)
                         .navigationSplitViewColumnWidth(min: 200, ideal: 300)
@@ -27,6 +29,9 @@ struct EntriesSplitView: View {
                         .navigationSplitViewColumnWidth(min: 300, ideal: 600)
                 }
                 .background(Color.clear)
+                .frame(maxHeight: .infinity)
+                
+                ErrorsView(geometry: geometry)
             }
         }
         .onAppear {
@@ -77,8 +82,4 @@ struct EntriesSplitView: View {
             }
         }
     }
-}
-
-#Preview {
-    EntriesSplitView()
 }

@@ -57,6 +57,15 @@ enum Entry: SearchableModel & IdentifiableModel {
     }
     
     init(from decoder: Decoder) throws {
+        guard let context = decoder.userInfo[JSONDecoder.contextKey] as? DecodingContext else {
+            throw DecodingError
+                .dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Missing JSONDecoder.contextKey \(decoder.userInfo)")
+                )
+        }
+        
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let sysContainer = try container.nestedContainer(keyedBy: SysCodingKeys.self, forKey: .sys)
         let contentTypeContainer = try sysContainer.nestedContainer(keyedBy: CodingKeys.self, forKey: .contentType)
@@ -65,8 +74,19 @@ enum Entry: SearchableModel & IdentifiableModel {
 
         switch type {
         case "book":
-            let book = try Book(from: decoder)
-            self = .book(book)
+            do {
+                let book = try Book(from: decoder)
+                self = .book(book)
+            } catch let error as LocalizedError {
+                do {
+                    let book = try Book(withSysContentFrom: decoder)
+                    self = .book(book)
+                    context.errorsViewModel.add(error)
+                } catch let error as LocalizedError {
+                    self = .book(Book())
+                    context.errorsViewModel.add(error)
+                }
+            }
         case "location":
             let location = try Location(from: decoder)
             self = .location(location)

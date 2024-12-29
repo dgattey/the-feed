@@ -10,14 +10,14 @@ import Foundation
 /**
  A Contentful-powered book model, with reformatted data for ease of use when working with it locally
  */
-struct Book: ContentfulModel {
+struct Book: ContentfulModel & EmptyCreatableModel {
     let sysContent: SysContent
     let title: String
     let author: String
     let isbn: Int?
     let readDateStarted: Date?
-    let readDateFinished: Date
-    let reviewDescription: TextNode
+    let readDateFinished: Date?
+    let reviewDescription: TextNode?
     let coverImage: AssetLink
     let rating: Int?
     
@@ -36,8 +36,8 @@ struct Book: ContentfulModel {
         || author.localizedCaseInsensitiveContains(searchText)
         || String(describing: isbn).localizedCaseInsensitiveContains(searchText)
         || readDateStarted?.description.localizedCaseInsensitiveContains(searchText) ?? false
-        || readDateFinished.description.localizedCaseInsensitiveContains(searchText)
-        || reviewDescription.contains(searchText: searchText)
+        || readDateFinished?.description.localizedCaseInsensitiveContains(searchText) ?? false
+        || reviewDescription?.contains(searchText: searchText) ?? false
         || sysContent.contains(searchText: searchText)
         || String(describing: rating).localizedCaseInsensitiveContains(searchText)
     }
@@ -51,6 +51,27 @@ struct Book: ContentfulModel {
         case reviewDescription
         case coverImage
         case rating
+    }
+    
+    init() {
+        self.init(sysContent: SysContent())
+    }
+    
+    init(sysContent: SysContent) {
+        self.title = "Unknown book"
+        self.author = "Unknown author"
+        self.sysContent = sysContent
+        self.isbn = nil
+        self.coverImage = AssetLink()
+        self.rating = nil
+        self.reviewDescription = nil
+        self.readDateStarted = nil
+        self.readDateFinished = nil
+    }
+    
+    init(withSysContentFrom decoder: any Decoder) throws {
+        let sysContent = try SysContent(from: decoder)
+        self.init(sysContent: sysContent)
     }
     
     init(from decoder: any Decoder) throws {
@@ -72,20 +93,29 @@ struct Book: ContentfulModel {
             isbn = nil
         }
         
-        let readDateFinishedContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
-        let readDateFinishedString = try readDateFinishedContainer.decode(String.self, forKey: .locale)
-        readDateFinished = Book.dateFormatter.date(from: readDateFinishedString)!
+        let readDateFinishedContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
+        if let readDateFinishedContainer = readDateFinishedContainer {
+            let readDateFinishedString = try readDateFinishedContainer.decode(String.self, forKey: .locale)
+            readDateFinished = Book.dateFormatter.date(from: readDateFinishedString)!
+        } else {
+            readDateFinished = nil
+        }
         
-        let readDateStartedContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateStarted)
-        if let readDateStartedContainer = readDateStartedContainerOrNil {
+        
+        let readDateStartedContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateStarted)
+        if let readDateStartedContainer = readDateStartedContainer {
             let readDateStartedString = try readDateStartedContainer.decode(String.self, forKey: .locale)
             readDateStarted = Book.dateFormatter.date(from: readDateStartedString)!
         } else {
             readDateStarted = nil
         }
         
-        let reviewDescriptionContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
-        reviewDescription = try reviewDescriptionContainer.decode(TextNode.self, forKey: .locale)
+        let reviewDescriptionContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
+        if let reviewDescriptionContainer = reviewDescriptionContainer {
+            reviewDescription = try reviewDescriptionContainer.decode(TextNode.self, forKey: .locale)
+        } else {
+            reviewDescription = nil
+        }
         
         let coverImageContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .coverImage)
         coverImage = try coverImageContainer.decode(AssetLink.self, forKey: .locale)
@@ -121,15 +151,19 @@ struct Book: ContentfulModel {
             try readDateStartedContainer.encode(readDateStartedString, forKey: .locale)
         }
         
-        var readDateFinishedContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
-        let readDateFinishedString = Book.dateFormatter.string(from: readDateFinished)
-        try readDateFinishedContainer.encode(readDateFinishedString, forKey: .locale)
+        if let readDateFinished = readDateFinished {
+            var readDateFinishedContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
+            let readDateFinishedString = Book.dateFormatter.string(from: readDateFinished)
+            try readDateFinishedContainer.encode(readDateFinishedString, forKey: .locale)
+        }
         
         var coverImageContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .coverImage)
         try coverImageContainer.encode(coverImage, forKey: .locale)
         
-        var reviewDescriptionContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
-        try reviewDescriptionContainer.encode(reviewDescription, forKey: .locale)
+        if let reviewDescription = reviewDescription {
+            var reviewDescriptionContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
+            try reviewDescriptionContainer.encode(reviewDescription, forKey: .locale)
+        }
         
         if let rating = rating {
             var ratingContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .rating)

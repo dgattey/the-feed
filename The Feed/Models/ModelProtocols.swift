@@ -34,11 +34,13 @@ protocol ContentfulModel: SearchableModel & IdentifiableModel {
 /**
  This should be used for models that can be created with defaults/no values
  */
-protocol EmptyCreatableModel: Model {
+protocol EmptyCreatableModel: Model {    
     init()
 }
 
 /**
  Empty so we can skip entries in a decoding setting if we don't want to error but we don't care about them
  */
-struct EmptyModel: EmptyCreatableModel {}
+struct EmptyModel: EmptyCreatableModel {
+    init() {}
+}
