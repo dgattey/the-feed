@@ -37,7 +37,7 @@ private struct EntriesListItemView: View {
         NavigationLink(value: entry) {
             switch entry {
             case .book(let book):
-                BookListItemView(book: book)
+                BookListItemView(withBook: book)
             case .location(let location):
                 LocationListItemView(location: location)
             case .textBlock(let textBlock):
