@@ -143,6 +143,9 @@ struct EntriesListItemView: View {
                 }
             }
         }
+        .foregroundStyle(
+            isHovered || isSelected ? .accentForeground : .foreground
+        )
         .background(
             RoundedRectangle(cornerRadius: 6)
                 .fill({

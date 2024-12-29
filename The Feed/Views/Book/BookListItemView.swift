@@ -77,9 +77,6 @@ struct BookListItemView: View {
                 }
                 .font(.subheadline)
             }
-            .foregroundStyle(
-                isHovered || isSelected ? .accentForeground : .foreground
-            )
             .padding(.leading, isHovered || isSelected ? 4 : 0)
         }
     }
