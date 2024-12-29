@@ -13,7 +13,7 @@ struct EntriesListView: View {
     @State var hoveredEntry: Entry?
     
     var body: some View {
-        List() {
+        List(selection: $selectedEntry) {
             ForEach(viewModel.filteredGroupedEntries) { group in
                 EntriesListSectionView(
                     selectedEntry: $selectedEntry,

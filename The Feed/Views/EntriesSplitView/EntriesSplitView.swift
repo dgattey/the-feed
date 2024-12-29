@@ -34,7 +34,7 @@ struct EntriesSplitView: View {
                 ErrorsView(geometry: geometry)
             }
         }
-        .frame(minHeight: 200)
+        .frame(minHeight: 200).ignoresSafeArea()
         .onAppear {
             Task {
                 withAnimation {

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#if os(macOS)
 struct CustomCursorView: NSViewRepresentable {
     func makeNSView(context: Context) -> CustomCursorNSView {
         return CustomCursorNSView()
@@ -44,3 +45,4 @@ class CustomCursorNSView: NSView {
         NSCursor.arrow.set() // Reset to default arrow cursor when mouse exits
     }
 }
+#endif
