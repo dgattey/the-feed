@@ -37,13 +37,18 @@ struct ErrorsView: View {
                 .padding(.vertical, padding)
                 .fixedSize(horizontal: true, vertical: false)
             }
-            .frame(width: maxTextWidth, height: errors.hasErrors ? maxHeight : 0)
+            .frame(maxWidth: maxTextWidth, maxHeight: errors.hasErrors ? maxHeight : 0)
             .fixedSize(horizontal: true, vertical: true)
             .defaultScrollAnchor(.top)
             .multilineTextAlignment(.center)
             .offset(y: errors.hasErrors ? 0 : maxHeight)
+            #if os(iOS)
+            // Layout specific to iOS (otherwise overflows on macOS)
+            .safeAreaPadding(.bottom, 16)
+            .clipped()
+            #endif
         }
         .animation(errors.hasErrors)
-        .frame(height: errors.hasErrors ? maxHeight : 0, alignment: .bottom)
+        .frame(maxHeight: errors.hasErrors ? maxHeight : 0, alignment: .bottom)
     }
 }
