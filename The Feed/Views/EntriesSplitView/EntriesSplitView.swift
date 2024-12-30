@@ -37,7 +37,10 @@ struct EntriesSplitView: View {
             Task {
                 withAnimation {
                     selectedEntry = nil
-                    viewModel.fetchData()
+                    let queue = DispatchQueue.global(qos: .utility)
+                    queue.async {
+                        viewModel.fetchData()
+                    }
                 }
             }
         }

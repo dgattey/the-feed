@@ -151,8 +151,11 @@ struct EntriesListView: View {
         withAnimation {
             selectedEntry = nil
             hoveredEntry = nil
-            viewModel.fetchData()
             errorsViewModel.reset()
+            let queue = DispatchQueue.global(qos: .utility)
+            queue.async {
+                viewModel.fetchData()
+            }
         }
     }
 }

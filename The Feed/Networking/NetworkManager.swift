@@ -79,6 +79,7 @@ struct NetworkManager {
         }
         return Just(DataSource(value: data, origin: .cache))
             .setFailureType(to: Error.self)
+            .receive(on: DispatchQueue.global(qos: .utility))
             .eraseToAnyPublisher()
     }
     
@@ -109,6 +110,7 @@ struct NetworkManager {
                 return data
             }
             .map { DataSource(value: $0, origin: .network) }
+            .receive(on: DispatchQueue.global(qos: .utility))
             .eraseToAnyPublisher()
         
         // If we had a cached response, return the merged publishers of both the cached response and non-cached
