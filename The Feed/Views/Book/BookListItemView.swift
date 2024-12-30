@@ -53,9 +53,12 @@ struct BookListItemView: View {
             if (
                 !book.coverImage.id.isEmpty &&
                 !assetViewModel.isLoading &&
-                (assetViewModel.asset == nil || assetViewModel.imageData == nil)
+                (assetViewModel.asset == nil || assetViewModel.image == nil)
             ) {
-                assetViewModel.fetchData()
+                let queue = DispatchQueue.global(qos: .utility)
+                queue.async {
+                    assetViewModel.fetchData()
+                }
             }
         }
     }
@@ -84,30 +87,19 @@ struct BookListItemView: View {
     var imageWithProgress: some View {
         ZStack {
             Color.background
-            if assetViewModel.isLoading && assetViewModel.imageData == nil {
+            
+            // Either loading, the decoded image, or the ! to show failure
+            if assetViewModel.isLoading && assetViewModel.image == nil {
                 ProgressView()
+            } else if let image = assetViewModel.image {
+                image.resizable()
             } else {
-#if os(macOS)
-                if let imageData = assetViewModel.imageData,
-                   let nsImage = NSImage(data: imageData) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .clipped()
-                } else {
+                Group {
                     Image(systemName: "exclamationmark")
-                }
-#else
-                if let imageData = assetViewModel.imageData,
-                   let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .clipped()
-                } else {
-                    Image(systemName: "exclamationmark")
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(Color.foreground)
                 }
-#endif
             }
         }
         .frame(width: 50, height: 75)

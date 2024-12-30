@@ -14,7 +14,7 @@ import SwiftUI
  */
 class ViewModel: ObservableObject {
     @Published var isLoading = false
-    private var errorsViewModel: ErrorsViewModel
+    var errorsViewModel: ErrorsViewModel
     
     init(_ errorsViewModel: ErrorsViewModel) {
         self.errorsViewModel = errorsViewModel

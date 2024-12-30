@@ -17,7 +17,7 @@ import SwiftUI
 class AssetViewModel: ViewModel {
     private let assetId: String
     @Published private(set) var asset: Asset?
-    @Published private(set) var imageData: Data?
+    @Published private(set) var image: Image?
     
     init(_ link: AssetLink, errorsViewModel: ErrorsViewModel) {
         self.assetId = link.id
@@ -54,11 +54,39 @@ class AssetViewModel: ViewModel {
         )
         fetchData(publisher) { dataSource in
             let justData: JustDataResponse = dataSource.value
-            self.imageData = justData.data
+            let imageData = justData.data
+            #if os(macOS)
+            // Platform specific decoding here
+            if let nsImage = NSImage(data: imageData) {
+                self.image = Image(nsImage: nsImage)
+            } else {
+                self.addDecodeError()
+            }
+            #else
+            if let uiImage = UIImage(data: imageData) {
+                self.image = Image(uiImage: uiImage)
+            } else {
+                self.addDecodeError()
+            }
+            #endif
             
             if dataSource.origin == .network {
                 self.isLoading = false
             }
         }
+    }
+    
+    /**
+     Reports a decode error for the image
+     */
+    private func addDecodeError() {
+        self.errorsViewModel.add(
+            DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: [],
+                    debugDescription: "Could not decode image with assetId \(assetId), url: \(asset?.file.url ?? "?")"
+                )
+            )
+        )
     }
 }
