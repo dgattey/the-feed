@@ -12,6 +12,7 @@ import Combine
 struct TheFeedApp: App {
     @State private var cancellables = Set<AnyCancellable>()
     @StateObject var errorsViewModel = ErrorsViewModel()
+    private static let refreshOnWindowActive = false
     
     var body: some Scene {
         WindowGroup {
@@ -27,6 +28,7 @@ struct TheFeedApp: App {
                     cancellables.removeAll()
                 }
             #if os(macOS)
+                // Calling platform-specific code
                 .didMoveToWindow { window in
                     window.isOpaque = false
                     window.backgroundColor = NSColor(Color.clear)
@@ -44,16 +46,19 @@ struct TheFeedApp: App {
      */
     func setUpRefreshOnWindowActive() {
         #if os(macOS)
+        // Calling platform specific code
         guard let window = NSApplication.shared.windows.first else {
             return
         }
         
         // Trigger a refresh when the window newly becomes active
-        NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification, object: window)
-            .sink { _ in
-                NotificationCenter.default.post(name: .refreshData, object: nil)
-            }
-            .store(in: &cancellables)
+        if (TheFeedApp.refreshOnWindowActive) {
+            NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification, object: window)
+                .sink { _ in
+                    NotificationCenter.default.post(name: .refreshData, object: nil)
+                }
+                .store(in: &cancellables)
+        }
         #endif
     }
 }
