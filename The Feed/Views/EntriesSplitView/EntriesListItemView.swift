@@ -113,17 +113,13 @@ struct EntriesListItemView: View {
             }
         }
         .onHover { isHovered in
-            if (isHovered && willHoverEntry == nil) {
-                willHoverEntry = entry
+            if (isHovered) {
                 withAnimation {
                     hoveredEntry = entry
-                    willHoverEntry = nil
                 }
-            } else if hoveredEntry?.id == entry.id && willHoverEntry == nil {
-                willHoverEntry = hoveredEntry
+            } else if hoveredEntry?.id == entry.id {
                 withAnimation {
                     hoveredEntry = nil
-                    willHoverEntry = nil
                 }
             }
         }

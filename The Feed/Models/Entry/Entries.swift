@@ -34,7 +34,6 @@ class Entries: PaginatedResponse {
                         debugDescription: "Missing JSONDecoder.contextKey \(decoder.userInfo)")
                 )
         }
-        context.errorsViewModel.reset()
             
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
@@ -57,7 +56,9 @@ class Entries: PaginatedResponse {
                 _ = try? entriesContainer.decode(EmptyModel.self)
                 continue
             } catch let error as LocalizedError {
-                context.errorsViewModel.add(error)
+                if (context.dataOrigin == .network) {
+                    context.errorsViewModel.add(error)
+                }
                 _ = try? entriesContainer.decode(EmptyModel.self)
                 continue
             }

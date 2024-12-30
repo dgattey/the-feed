@@ -65,7 +65,8 @@ class ViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 decoder
                     .userInfo[JSONDecoder.contextKey] = DecodingContext(
-                        errorsViewModel: self.errorsViewModel
+                        errorsViewModel: self.errorsViewModel,
+                        dataOrigin: dataSource.origin
                     )
                 do {
                     let response = try decoder.decode(ResponseType.self, from: data)

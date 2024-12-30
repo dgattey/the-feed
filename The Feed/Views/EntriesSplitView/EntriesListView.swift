@@ -11,6 +11,7 @@ struct EntriesListView: View {
     @ObservedObject var viewModel: EntriesViewModel
     @Binding var selectedEntry: Entry?
     @State var hoveredEntry: Entry?
+    @EnvironmentObject var errorsViewModel: ErrorsViewModel
     
     var body: some View {
         List(selection: $selectedEntry) {
@@ -151,6 +152,7 @@ struct EntriesListView: View {
             selectedEntry = nil
             hoveredEntry = nil
             viewModel.fetchData()
+            errorsViewModel.reset()
         }
     }
 }

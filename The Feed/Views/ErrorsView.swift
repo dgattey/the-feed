@@ -11,31 +11,39 @@ import SwiftUI
  Shows a full page error message view
  */
 struct ErrorsView: View {
-    var geometry: GeometryProxy
     @EnvironmentObject var errors: ErrorsViewModel
     
+    private let maxHeight: CGFloat = 52
+    private let maxTextWidth: CGFloat = 300
+    private let padding: CGFloat = 8
+    
     var body: some View {
-        let lowerViewHeight = !errors.hasErrors ?
-            0 :
-            max(48, min(geometry.size.height * 0.12, 64))
-        
         ZStack {
-            Color.red.mix(with: Color.background, by: 0.35).ignoresSafeArea()
+            Color.red.mix(with: Color.background, by: 0.4)
+                .frame(idealWidth: .infinity, idealHeight: .infinity)
             ScrollView(.vertical) {
-                LazyVStack(spacing: 4) {
+                Group {
                     if (errors.errorCount == 1) {
-                        Text("Encountered an error, check console").font(.headline)
+                        Text("Encountered an error, check console")
+                            .font(.headline)
                         Text(errors.errors.first!).textSelection(.enabled)
                     } else if (errors.errorCount > 1) {
                         Text("Encountered \(errors.errorCount) errors, check console")
                             .font(.headline)
                     }
                 }
-                .padding(16)
-                .containerRelativeFrame(.vertical, alignment: .center)
+                .lineLimit(nil)
+                .frame(width: maxTextWidth - padding)
+                .padding(.vertical, padding)
+                .fixedSize(horizontal: true, vertical: false)
             }
+            .frame(width: maxTextWidth, height: errors.hasErrors ? maxHeight : 0)
+            .fixedSize(horizontal: true, vertical: true)
+            .defaultScrollAnchor(.top)
+            .multilineTextAlignment(.center)
+            .offset(y: errors.hasErrors ? 0 : maxHeight)
         }
-        .animation(.easeInOut(duration: 0.25), value: errors.hasErrors)
-        .frame(height: lowerViewHeight)
+        .animation(errors.hasErrors)
+        .frame(height: errors.hasErrors ? maxHeight : 0, alignment: .bottom)
     }
 }

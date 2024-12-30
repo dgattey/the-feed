@@ -81,10 +81,14 @@ enum Entry: SearchableModel & IdentifiableModel {
                 do {
                     let book = try Book(withSysContentFrom: decoder)
                     self = .book(book)
-                    context.errorsViewModel.add(error)
+                    if (context.dataOrigin == .network) {
+                        context.errorsViewModel.add(error)
+                    }
                 } catch let error as LocalizedError {
                     self = .book(Book())
-                    context.errorsViewModel.add(error)
+                    if (context.dataOrigin == .network) {
+                        context.errorsViewModel.add(error)
+                    }
                 }
             }
         case "location":

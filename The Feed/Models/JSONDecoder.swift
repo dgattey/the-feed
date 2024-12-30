@@ -9,6 +9,7 @@ import Foundation
 
 struct DecodingContext {
     let errorsViewModel: ErrorsViewModel
+    let dataOrigin: DataOrigin
 }
 
 extension JSONDecoder {

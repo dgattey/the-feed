@@ -19,20 +19,18 @@ struct EntriesSplitView: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                NavigationSplitView {
-                    EntriesListView(viewModel: viewModel, selectedEntry: $selectedEntry)
-                        .navigationSplitViewColumnWidth(min: 200, ideal: 300)
-                } detail: {
-                    entryDetail
-                        .navigationSplitViewColumnWidth(min: 300, ideal: 600)
-                }
-                .background(Color.clear)
-                .frame(maxHeight: .infinity)
-                
-                ErrorsView(geometry: geometry)
+        VStack(alignment: .leading, spacing: 0) {
+            NavigationSplitView {
+                EntriesListView(viewModel: viewModel, selectedEntry: $selectedEntry)
+                    .navigationSplitViewColumnWidth(min: 200, ideal: 300)
+            } detail: {
+                entryDetail
+                    .navigationSplitViewColumnWidth(min: 300, ideal: 600)
             }
+            .background(Color.clear)
+            .frame(maxHeight: .infinity)
+            
+            ErrorsView()
         }
         .frame(minHeight: 200)
         .onAppear {
