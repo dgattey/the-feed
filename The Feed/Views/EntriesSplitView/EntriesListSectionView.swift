@@ -28,6 +28,7 @@ struct EntriesListSectionView: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
 #if os(iOS)
+        // Not available on macOS
         .listSectionSpacing(.custom(24))
 #endif
     }

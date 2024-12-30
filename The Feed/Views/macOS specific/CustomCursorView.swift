@@ -8,6 +8,9 @@
 import SwiftUI
 
 #if os(macOS)
+/**
+ A platform specific view that sets the cursor to a pointer while the mouse is in the view
+ */
 struct CustomCursorView: NSViewRepresentable {
     func makeNSView(context: Context) -> CustomCursorNSView {
         return CustomCursorNSView()

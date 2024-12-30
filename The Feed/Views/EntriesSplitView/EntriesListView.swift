@@ -7,6 +7,16 @@
 
 import SwiftUI
 
+fileprivate struct Constants {
+    #if os(macOS)
+    static let searchFieldPlacement: SearchFieldPlacement = .sidebar
+    static let listStyle = SidebarListStyle.sidebar
+    #else
+    static let searchFieldPlacement: SearchFieldPlacement = .navigationBarDrawer(displayMode:.always)
+    static let listStyle = PlainListStyle.plain
+    #endif
+}
+
 struct EntriesListView: View {
     @ObservedObject var viewModel: EntriesViewModel
     @Binding var selectedEntry: Entry?
@@ -62,16 +72,17 @@ struct EntriesListView: View {
         }
         .navigationTitle("The Feed")
         .frame(alignment: .top)
-#if os(iOS)
         .searchable(
             text: $viewModel.searchText,
             tokens: $viewModel.selectedTokens,
             suggestedTokens: $viewModel.suggestedTokens,
-            placement: .navigationBarDrawer(displayMode:.always),
+            placement: Constants.searchFieldPlacement,
             prompt: Text("Search your feed"),
             token: { Text($0.rawValue) }
         )
-        .listStyle(.plain)
+        .listStyle(Constants.listStyle)
+#if os(iOS)
+        // Reset for styling
         .onAppear() {
             UITableView.appearance().backgroundColor = .clear
             UITableViewCell.appearance().backgroundColor = .clear
@@ -79,16 +90,7 @@ struct EntriesListView: View {
             UITableViewCell.appearance().backgroundView = nil
         }
 #else
-        // On macOS, show toolbar on the list view for refreshing without the sidebar toggle and react to esc to deselect all
-        .searchable(
-            text: $viewModel.searchText,
-            tokens: $viewModel.selectedTokens,
-            suggestedTokens: $viewModel.suggestedTokens,
-            placement: .sidebar,
-            prompt: Text("Search your feed"),
-            token: { Text($0.rawValue) }
-        )
-        .listStyle(.sidebar)
+        // Just shows up on macOS
         .toolbar { toolbarContent }
         .toolbarBackground(Color.clear, for: .windowToolbar)
 #endif
@@ -107,9 +109,7 @@ struct EntriesListView: View {
                     .foregroundColor(.gray)
                     .lineLimit(.max)
                     .padding(.vertical, 32)
-#if os(iOS)
                     .padding(.horizontal)
-#endif
                     .containerRelativeFrame(.horizontal, alignment: .center)
                     .multilineTextAlignment(.center)
             }

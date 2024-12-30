@@ -8,6 +8,9 @@
 import SwiftUI
 
 #if os(macOS)
+/**
+ A platform-specific view that lets us set a transparent window
+ */
 class WindowBackedHelperView: NSView {
     var didMoveToWindow: (NSWindow) -> Void
     
