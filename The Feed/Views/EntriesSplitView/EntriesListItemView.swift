@@ -9,6 +9,7 @@ import Combine
 import SwiftUI
 
 private let interItemSpacing: CGFloat = 4
+private let insetPadding: CGFloat = 4
 private let horizontalPadding: CGFloat = 6
 
 /**
@@ -50,9 +51,9 @@ struct EntriesListItemView: View {
     private var verticalPadding: CGFloat {
         switch (entry.category, isSelected) {
         case (.book, false):
-            return 8
+            return 4
         default:
-            return -interItemSpacing
+            return -insetPadding
         }
     }
     
@@ -62,7 +63,7 @@ struct EntriesListItemView: View {
     private var leadingPadding: CGFloat {
         switch (entry.category, isSelected) {
         case (.book, false):
-            return 8
+            return 4
         default:
             return -horizontalPadding
         }
@@ -100,6 +101,7 @@ struct EntriesListItemView: View {
             .padding(.vertical, interItemSpacing)
             
             #if os(macOS)
+            // Not available on iOS!
             CustomCursorView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(-interItemSpacing)
@@ -113,33 +115,38 @@ struct EntriesListItemView: View {
             }
         }
         .onHover { isHovered in
-            if (isHovered) {
+            if isHovered && hoveredEntry?.id != entry.id {
                 withAnimation {
                     hoveredEntry = entry
                 }
-            } else if hoveredEntry?.id == entry.id {
+            } else if !isHovered && hoveredEntry?.id == entry.id {
                 withAnimation {
                     hoveredEntry = nil
                 }
             }
         }
         #if os(macOS)
-        .foregroundStyle(
-            isHovered || isSelected ? .accentForeground : .foreground
-        )
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill({
-                    if isSelected || isHovered {
-                        return Color.backgroundAccent
-                    }
-                    return Color.clear
-                }())
-                .padding(.vertical, verticalPadding)
-                .padding(.leading, leadingPadding)
-                .padding(.trailing, trailingPadding)
-                .animation(.snappy(duration: 0.2), value: state)
-        )
+        // We don't show background highlight on iOS
+        .foregroundStyle(isHovered || isSelected ? .accentForeground : .foreground)
+        .background(highlightIndicator)
         #endif
+    }
+    
+    /**
+     On platforms that show a highlight (just macOS), this view can be the background behind the view
+     */
+    var highlightIndicator: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill({
+                if isSelected || isHovered {
+                    return Color.backgroundAccent
+                }
+                return Color.clear
+            }())
+            .frame(maxHeight: isSelected ? .infinity : 60)
+            .padding(.vertical, verticalPadding)
+            .padding(.leading, leadingPadding)
+            .padding(.trailing, trailingPadding)
+            .animation(.snappy(duration: 0.2), value: state)
     }
 }

@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+fileprivate struct CoverImage {
+    static let cornerRadius: CGFloat = 6
+    static let hoverScaleFactor: CGFloat = 1.02
+    static let aspectRatio: CGFloat = 1/1.5
+    static let errorImagePadding: CGFloat = 16
+    
+    #if os(macOS)
+    static let minWidth: CGFloat = 40
+    static let maxWidth: CGFloat = 64
+    static let maxErrorImageHeight: CGFloat = 40
+    static let nonImageGridCellColumns = 4
+    #else
+    static let minWidth: CGFloat = 32
+    static let maxWidth: CGFloat = 44
+    static let maxErrorImageHeight: CGFloat = 36
+    static let nonImageGridCellColumns = 5
+    #endif
+}
+
 /**
  Shows a single book item for a list item view
  TODO: @dgattey draft status, rating?
@@ -17,7 +36,6 @@ struct BookListItemView: View {
     @Binding private var state: EntriesListItemView.ViewState
     
     @StateObject private var assetViewModel: AssetViewModel
-    private let scaleFactorOnHover: CGFloat = 1.02
     
     private var isSelected: Bool {
         return state == .hoveredAndSelected || state == .selected
@@ -64,23 +82,32 @@ struct BookListItemView: View {
     }
     
     var mainContent: some View {
-        HStack(spacing: 12) {
-            imageWithProgress
-            VStack(alignment: .leading, spacing: 8) {
-                Text(book.title).font(.headline)
-                Text(book.author).font(.subheadline)
-                Group {
-                    if let readDateFinished = book.readDateFinished {
-                        Text("Finished on \(readDateFinished.formatted(date: .abbreviated, time: .omitted))")
-                    } else if let readDateStarted = book.readDateStarted {
-                        Text("Started reading on \(readDateStarted.formatted(date: .abbreviated, time: .omitted))")
-                    } else if let createdAt = book.sysContent.createdAt {
-                        Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
+        Grid(horizontalSpacing: 18.0) {
+            GridRow {
+                imageWithProgress
+                
+                Grid(alignment: .leadingFirstTextBaseline, verticalSpacing: 4) {
+                    GridRow {
+                        Text(book.title).font(.headline)
                     }
+                    GridRow {
+                        Text(book.author).font(.subheadline)
+                    }
+                    GridRow {
+                        if let readDateFinished = book.readDateFinished {
+                            Text("Finished on \(readDateFinished.formatted(date: .abbreviated, time: .omitted))")
+                        } else if let readDateStarted = book.readDateStarted {
+                            Text("Started reading on \(readDateStarted.formatted(date: .abbreviated, time: .omitted))")
+                        } else if let createdAt = book.sysContent.createdAt {
+                            Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
+                        }
+                    }
+                    .font(.subheadline)
                 }
-                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, isHovered || isSelected ? 4 : 0)
+                .gridCellColumns(CoverImage.nonImageGridCellColumns)
             }
-            .padding(.leading, isHovered || isSelected ? 4 : 0)
         }
     }
     
@@ -99,16 +126,20 @@ struct BookListItemView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .foregroundStyle(Color.foreground)
+                        .frame(maxHeight: CoverImage.maxErrorImageHeight)
                 }
+                .padding(CoverImage.errorImagePadding)
             }
         }
-        .frame(width: 50, height: 75)
-        .cornerRadius(8)
+        .cornerRadius(CoverImage.cornerRadius)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: CoverImage.cornerRadius)
                 .stroke(.separator, lineWidth: 1)
+                .foregroundStyle(Color.foreground)
         )
+        .aspectRatio(CoverImage.aspectRatio, contentMode: .fill)
+        .frame(minWidth: CoverImage.minWidth, maxWidth: CoverImage.maxWidth)
         .rotationEffect(isHovered && !isSelected ? .degrees(degreesRotationOnHover) : .zero)
-        .scaleEffect(isHovered && !isSelected ? scaleFactorOnHover : 1)
+        .scaleEffect(isHovered && !isSelected ? CoverImage.hoverScaleFactor : 1)
     }
 }
