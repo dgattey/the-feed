@@ -28,7 +28,6 @@ fileprivate struct CoverImage {
 
 /**
  Shows a single book item for a list item view
- TODO: @dgattey draft status, rating?
  */
 struct BookListItemView: View {
     let book: Book

@@ -28,3 +28,33 @@ Each model  implements its own searchability, and the view model calls into all 
 
 ### Network data caching
 There's a cache that persists between app launches so it can show data from last time. Every call is cached by default if you use the `UrlCachedSessionManager`. Each data task publisher emits two values each time it's called, once with cached data and once with network data. Each is tagged via `DataSource` and a `DataOrigin` to show where it comes from.
+
+## TODO features
+Goal is to have list of all media I've finished/currently consuming/wishlist, and allow for surfacing my best recommendations for others
+
+### Milestone A - Basics
+- Feed of all books in main screen
+- Viewing book details
+- Editing book details
+- "Start reading" a new book (i.e. add a new book)
+
+### Milestone B - Booksmarts
+- Import from Goodreads CSV format (updating in place if needed, no dupes)
+- Link to open Goodreads after marking book as done (and copy review) so I can paste there too
+- Validation (i.e. can't mark as finished without review and rating filled out, etc)
+- Fetch details automatically for image/etc when adding a new book
+- Descriptions pulled from web for the book too - probably via a just in time API, and maybe use this for cover image
+
+### Milestone C - Organization
+- Count/preview of currently in progress at top of sidebar list, maybe separated into thumbnails/counts by type?
+- ^ show sections/ways to access done, in progress, wishlist - maybe also arbitrary lists?
+- Show if somehing is in Contentful draft status (see `SysContent.fieldStatus`)
+- Sorting (name/year/type of content, but also manual sorting within wishlist - maybe 5 people tell me about one thing and I want to move it up)
+- Filtering (done/in progress/wishlist, and existing)
+- Move to server-driven sort?
+- Recommendations section
+
+### Milestone D - Feed me more
+- Add movies & TV shows to Contentful models & backfill as many as possible I can remember
+- Editing/viewing of website things & a "website mode" vs "media mode" for whole app
+- Quick switcher

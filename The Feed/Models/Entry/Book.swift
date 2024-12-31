@@ -86,15 +86,15 @@ struct Book: ContentfulModel & EmptyCreatableModel {
         let authorContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .author)
         author = try authorContainer.decode(String.self, forKey: .locale)
         
-        let isbnContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .isbn)
-        if let isbnContainer = isbnContainerOrNil {
+        let isbnContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .isbn)
+        if let isbnContainer {
             isbn = try isbnContainer.decode(Int.self, forKey: .locale)
         } else {
             isbn = nil
         }
         
         let readDateFinishedContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateFinished)
-        if let readDateFinishedContainer = readDateFinishedContainer {
+        if let readDateFinishedContainer {
             let readDateFinishedString = try readDateFinishedContainer.decode(String.self, forKey: .locale)
             readDateFinished = Book.dateFormatter.date(from: readDateFinishedString)!
         } else {
@@ -103,7 +103,7 @@ struct Book: ContentfulModel & EmptyCreatableModel {
         
         
         let readDateStartedContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .readDateStarted)
-        if let readDateStartedContainer = readDateStartedContainer {
+        if let readDateStartedContainer {
             let readDateStartedString = try readDateStartedContainer.decode(String.self, forKey: .locale)
             readDateStarted = Book.dateFormatter.date(from: readDateStartedString)!
         } else {
@@ -111,7 +111,7 @@ struct Book: ContentfulModel & EmptyCreatableModel {
         }
         
         let reviewDescriptionContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .reviewDescription)
-        if let reviewDescriptionContainer = reviewDescriptionContainer {
+        if let reviewDescriptionContainer {
             reviewDescription = try reviewDescriptionContainer.decode(TextNode.self, forKey: .locale)
         } else {
             reviewDescription = nil
@@ -120,8 +120,8 @@ struct Book: ContentfulModel & EmptyCreatableModel {
         let coverImageContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .coverImage)
         coverImage = try coverImageContainer.decode(AssetLink.self, forKey: .locale)
         
-        let ratingContainerOrNil = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .rating)
-        if let ratingContainer = ratingContainerOrNil {
+        let ratingContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .rating)
+        if let ratingContainer {
             rating = try ratingContainer.decode(Int.self, forKey: .locale)
         } else {
             rating = nil

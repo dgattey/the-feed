@@ -12,7 +12,7 @@ import Foundation
  */
 class Asset: ContentfulModel & EmptyCreatableModel & ObservableObject {
     let sysContent: SysContent
-    let description: String
+    let description: String?
     let file: AssetFile
     let title: String
     
@@ -22,7 +22,7 @@ class Asset: ContentfulModel & EmptyCreatableModel & ObservableObject {
     
     func contains(searchText: String) -> Bool {
         return sysContent.contains(searchText: searchText)
-        || description.localizedCaseInsensitiveContains(searchText)
+        || description?.localizedCaseInsensitiveContains(searchText) ?? false
         || file.contains(searchText: searchText)
         || title.localizedCaseInsensitiveContains(searchText)
     }
@@ -35,7 +35,7 @@ class Asset: ContentfulModel & EmptyCreatableModel & ObservableObject {
     
     required init() {
         sysContent = SysContent()
-        description = ""
+        description = nil
         file = AssetFile()
         title = ""
     }
@@ -46,8 +46,12 @@ class Asset: ContentfulModel & EmptyCreatableModel & ObservableObject {
         
         let fieldsContainer = try container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
         
-        let descriptionContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
-        description = try descriptionContainer.decode(String.self, forKey: .locale)
+        let descriptionContainer = try? fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
+        if let descriptionContainer {
+            description = try descriptionContainer.decode(String.self, forKey: .locale)
+        } else {
+            description = nil
+        }
         
         let fileContainer = try fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .file)
         file = try fileContainer.decode(AssetFile.self, forKey: .locale)
@@ -62,8 +66,10 @@ class Asset: ContentfulModel & EmptyCreatableModel & ObservableObject {
         
         var fieldsContainer = container.nestedContainer(keyedBy: FieldsCodingKeys.self, forKey: .fields)
         
-        var descriptionContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
-        try descriptionContainer.encode(description, forKey: .locale)
+        if let description {
+            var descriptionContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .description)
+            try descriptionContainer.encode(description, forKey: .locale)
+        }
         
         var fileContainer = fieldsContainer.nestedContainer(keyedBy: FieldItemCodingKeys.self, forKey: .file)
         try fileContainer.encode(file, forKey: .locale)
