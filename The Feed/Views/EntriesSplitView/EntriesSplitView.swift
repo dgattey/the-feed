@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+
+fileprivate struct Constants {
+    static let minListWidth: CGFloat = 200
+    static let idealListWidth: CGFloat = 300
+    static let minDetailColumnWidth: CGFloat = 300
+    static let maxDetailColumnWidth: CGFloat = 600
+}
+
 /**
  Shows the entries list or an error page. Responsible for initializing the view model and handling all errors.
  */
@@ -23,10 +31,11 @@ struct EntriesSplitView: View {
             NavigationSplitView {
                 EntriesListView(selectedEntry: $selectedEntry)
                     .environmentObject(viewModel)
-                    .navigationSplitViewColumnWidth(min: 200, ideal: 300)
+                    .navigationSplitViewColumnWidth(min: Constants.minListWidth, ideal: Constants.idealListWidth)
             } detail: {
                 entryDetail
-                    .navigationSplitViewColumnWidth(min: 300, ideal: 600)
+                    .navigationSplitViewColumnWidth(min: Constants.minDetailColumnWidth, ideal: Constants.maxDetailColumnWidth)
+                    .frame(minWidth: 0, maxWidth: Constants.maxDetailColumnWidth, alignment: .center)
             }
             .background(Color.clear)
             .frame(maxHeight: .infinity)

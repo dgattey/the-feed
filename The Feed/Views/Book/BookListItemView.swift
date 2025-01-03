@@ -7,25 +7,6 @@
 
 import SwiftUI
 
-fileprivate struct CoverImage {
-    static let cornerRadius: CGFloat = 6
-    static let hoverScaleFactor: CGFloat = 1.02
-    static let aspectRatio: CGFloat = 1/1.5
-    static let errorImagePadding: CGFloat = 16
-    
-    #if os(macOS)
-    static let minWidth: CGFloat = 40
-    static let maxWidth: CGFloat = 64
-    static let maxErrorImageHeight: CGFloat = 40
-    static let nonImageGridCellColumns = 4
-    #else
-    static let minWidth: CGFloat = 32
-    static let maxWidth: CGFloat = 44
-    static let maxErrorImageHeight: CGFloat = 36
-    static let nonImageGridCellColumns = 5
-    #endif
-}
-
 /**
  Shows a single book item for a list item view
  */
@@ -105,7 +86,7 @@ struct BookListItemView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, isHovered || isSelected ? 4 : 0)
-                .gridCellColumns(CoverImage.nonImageGridCellColumns)
+                .gridCellColumns(CoverImageConstants.nonImageGridCellColumns)
             }
         }
     }
@@ -125,20 +106,20 @@ struct BookListItemView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .foregroundStyle(Color.foreground)
-                        .frame(maxHeight: CoverImage.maxErrorImageHeight)
+                        .frame(maxHeight: CoverImageConstants.maxErrorImageHeight)
                 }
-                .padding(CoverImage.errorImagePadding)
+                .padding(CoverImageConstants.errorImagePadding)
             }
         }
-        .cornerRadius(CoverImage.cornerRadius)
+        .cornerRadius(CoverImageConstants.cornerRadius)
         .overlay(
-            RoundedRectangle(cornerRadius: CoverImage.cornerRadius)
+            RoundedRectangle(cornerRadius: CoverImageConstants.cornerRadius)
                 .stroke(.separator, lineWidth: 1)
                 .foregroundStyle(Color.foreground)
         )
-        .aspectRatio(CoverImage.aspectRatio, contentMode: .fill)
-        .frame(minWidth: CoverImage.minWidth, maxWidth: CoverImage.maxWidth)
+        .aspectRatio(CoverImageConstants.aspectRatio, contentMode: .fill)
+        .frame(minWidth: CoverImageConstants.minWidth, maxWidth: CoverImageConstants.maxWidth)
         .rotationEffect(isHovered && !isSelected ? .degrees(degreesRotationOnHover) : .zero)
-        .scaleEffect(isHovered && !isSelected ? CoverImage.hoverScaleFactor : 1)
+        .scaleEffect(isHovered && !isSelected ? CoverImageConstants.hoverScaleFactor : 1)
     }
 }
