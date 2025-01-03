@@ -11,8 +11,9 @@ import SwiftUI
 fileprivate struct Constants {
     static let minListWidth: CGFloat = 200
     static let idealListWidth: CGFloat = 300
-    static let minDetailColumnWidth: CGFloat = 300
-    static let maxDetailColumnWidth: CGFloat = 600
+    static let minDetailWidth: CGFloat = 300
+    static let idealDetailWidth: CGFloat = 600
+    static let minHeight: CGFloat = 200
 }
 
 /**
@@ -27,22 +28,21 @@ struct EntriesSplitView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             NavigationSplitView {
                 EntriesListView(selectedEntry: $selectedEntry)
-                    .environmentObject(viewModel)
                     .navigationSplitViewColumnWidth(min: Constants.minListWidth, ideal: Constants.idealListWidth)
             } detail: {
-                entryDetail
-                    .navigationSplitViewColumnWidth(min: Constants.minDetailColumnWidth, ideal: Constants.maxDetailColumnWidth)
-                    .frame(minWidth: 0, maxWidth: Constants.maxDetailColumnWidth, alignment: .center)
+                scrollableDetailPane
+                    .navigationSplitViewColumnWidth(min: Constants.minDetailWidth, ideal: Constants.idealDetailWidth)
             }
             .background(Color.clear)
             .frame(maxHeight: .infinity)
             
             ErrorsView()
         }
-        .frame(minHeight: 200)
+        .environmentObject(viewModel)
+        .frame(minHeight: Constants.minHeight)
         .onAppear {
             Task {
                 withAnimation {
@@ -57,20 +57,47 @@ struct EntriesSplitView: View {
     }
     
     /**
-     What shows up when you click an entry
+     Wraps the contents of the detail
      */
-    private var entryDetail: some View {
+    private var scrollableDetailPane: some View {
         ZStack {
-            #if os(macOS)
-            // Add a background to the title bar on mac
+            ScrollView {
+                detailPane
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            }
+            
+            macTitleBarBackground
+        }
+    }
+    
+    /**
+     For macOS, put a background and separator behind the title bar on just the detail side.
+     */
+    private var macTitleBarBackground: some View {
+        Group {
+#if os(macOS)
             VStack(spacing: 0) {
-                Color.clear.ignoresSafeArea().frame(height: 39)
-                Rectangle().fill(.separator).frame(height: 0.5)
+                Rectangle()
+                    .fill(Color.backgroundGlass)
+                    .background(.ultraThinMaterial)
+                    .ignoresSafeArea()
+                    .frame(height: 39)
+                Rectangle()
+                    .fill(.separator)
+                    .frame(height: 0.5)
                 Spacer()
             }
             .padding(.top, -39)
-            #endif
-            
+#endif
+        }
+    }
+    
+    /**
+     Entry detail view or what shows up when you have nothing selected
+     */
+    private var detailPane: some View {
+        Group {
             if let unwrappedItem = selectedEntry {
                 EntryDetailView(entry: Binding(
                     get: { unwrappedItem },
