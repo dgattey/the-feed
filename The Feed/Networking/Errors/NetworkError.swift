@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 typealias DataResult = Result<Data, NetworkError>
 typealias DataResultCallback = (DataResult) -> Void
@@ -14,8 +15,10 @@ enum NetworkError: Error, LocalizedError {
     case redirectionError(String)
     // 401/403 unauthorized
     case unauthorized(String)
+    // 429 too many requests in a short time period
+    case tooManyRequests(String)
     // Some other 4xx error
-    case clientError(String)
+    case clientError(String, status: Int)
     // Some 5xx error
     case serverError(String)
     // Couldn't decode the response properly
@@ -25,11 +28,13 @@ enum NetworkError: Error, LocalizedError {
     
     var localizedDescription: String {
         switch self {
+        case .clientError(let message, let status):
+            return "\(status): \(message)"
         case .redirectionError(let message):
             fallthrough
         case .unauthorized(let message):
             fallthrough
-        case .clientError(let message):
+        case .tooManyRequests(let message):
             fallthrough
         case .serverError(let message):
             return message
@@ -74,19 +79,25 @@ enum NetworkError: Error, LocalizedError {
             fallthrough
         case 403:
             if let errorMessage = try? JSONDecoder().decode(ServerError.self, from: output.data) {
-                throw NetworkError.clientError(errorMessage.message)
+                throw NetworkError.clientError(errorMessage.message, status: httpResponse.statusCode)
             } else {
-                throw NetworkError.clientError("Unauthorized with status code \(httpResponse.statusCode).")
+                throw NetworkError.clientError("Unauthorized", status: httpResponse.statusCode)
+            }
+        case 429:
+            if let errorMessage = try? JSONDecoder().decode(ServerError.self, from: output.data) {
+                throw NetworkError.tooManyRequests(errorMessage.message)
+            } else {
+                throw NetworkError.tooManyRequests("Too many requests")
             }
         case 400...499:
             if let errorMessage = try? JSONDecoder().decode(ServerError.self, from: output.data) {
-                throw NetworkError.clientError(errorMessage.message)
+                throw NetworkError.clientError(errorMessage.message, status: httpResponse.statusCode)
             } else {
-                throw NetworkError.clientError("Client error with status code \(httpResponse.statusCode).")
+                throw NetworkError.clientError("Client error", status: httpResponse.statusCode)
             }
         case 500...599:
             if let errorMessage = try? JSONDecoder().decode(ServerError.self, from: output.data) {
-                throw NetworkError.clientError(errorMessage.message)
+                throw NetworkError.serverError(errorMessage.message)
             } else {
                 throw NetworkError.serverError("Server error with status code \(httpResponse.statusCode).")
             }
@@ -96,5 +107,27 @@ enum NetworkError: Error, LocalizedError {
             }
             throw NetworkError.invalidResponse
         }
+    }
+}
+
+extension Publisher where Output == Data, Failure == Error {
+    
+    /**
+     Retries a request if we get a too many requests error, after a delay
+     */
+    func retryOnTooManyRequests(maxRetries: Int, delay: TimeInterval) -> AnyPublisher<Data, Error> {
+        self.catch { error -> AnyPublisher<Data, Error> in
+            if case NetworkError.tooManyRequests = error {
+                var attempts = 0
+                return self.delay(for: .seconds(delay), scheduler: RunLoop.current)
+                    .retry(maxRetries)
+                    .handleEvents(receiveOutput: { _ in attempts += 1 })
+                    .filter { _ in attempts < maxRetries }
+                    .eraseToAnyPublisher()
+            } else {
+                // For other errors, just throw them
+                return Fail(error: error).eraseToAnyPublisher()
+            }
+        }.eraseToAnyPublisher()
     }
 }

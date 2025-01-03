@@ -100,6 +100,7 @@ struct NetworkManager {
         
         let networkCallPublisher = URLSession.shared.dataTaskPublisher(for: request)
             .tryMap(NetworkError.handle)
+            .retryOnTooManyRequests(maxRetries: 3, delay: 1)
             .map { data in
                 if (_isDebugAssertConfiguration() && printDebugInfo) {
                     print(
