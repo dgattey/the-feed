@@ -34,7 +34,9 @@ struct EntriesListView: View {
                 )
             }
             
-            noSearchResults
+            if viewModel.hasNoResults {
+                NoResultsView(searchText: viewModel.searchText, layout: .text)
+            }
         }
         .onKeyPress(.escape) {
             withAnimation {
@@ -81,26 +83,6 @@ struct EntriesListView: View {
         .toolbar { toolbarContent }
         .toolbarBackground(Color.clear, for: .windowToolbar)
 #endif
-    }
-    
-    /**
-     If the user has searched but there's nothing, show this view
-     */
-    private var noSearchResults: some View {
-        Group {
-            if viewModel.filteredGroupedEntries.isEmpty && !viewModel.searchText.isEmpty {
-                Text("No results found for '\(viewModel.searchText)'")
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .font(.headline)
-                    .foregroundColor(.gray)
-                    .lineLimit(.max)
-                    .padding(.vertical, 32)
-                    .padding(.horizontal)
-                    .containerRelativeFrame(.horizontal, alignment: .center)
-                    .multilineTextAlignment(.center)
-            }
-        }
     }
     
     /**
