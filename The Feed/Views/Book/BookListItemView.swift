@@ -48,16 +48,13 @@ struct BookListItemView: View {
     var body: some View {
         mainContent
         .onAppear {
-            if (
-                !book.coverImage.id.isEmpty &&
-                !assetViewModel.isLoading &&
-                (assetViewModel.asset == nil || assetViewModel.image == nil)
-            ) {
-                let queue = DispatchQueue.global(qos: .utility)
-                queue.async {
-                    assetViewModel.fetchData()
-                }
+            let queue = DispatchQueue.global(qos: .utility)
+            queue.async {
+                assetViewModel.fetchData()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
+            assetViewModel.resetAndFetch()
         }
     }
     

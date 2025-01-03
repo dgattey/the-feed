@@ -72,7 +72,7 @@ struct EntriesListView: View {
         .listStyle(Constants.listStyle)
 #if os(iOS)
         // Reset for styling
-        .onAppear() {
+        .onAppear {
             UITableView.appearance().backgroundColor = .clear
             UITableViewCell.appearance().backgroundColor = .clear
             UITableView.appearance().backgroundView = nil
@@ -96,7 +96,7 @@ struct EntriesListView: View {
             ToolbarItem {
                 Button(action: {
                     Task {
-                        resetAndFetch()
+                        NotificationCenter.default.postRefreshData()
                     }
                 }) {
                     Group {

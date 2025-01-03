@@ -16,18 +16,44 @@ import SwiftUI
 
 class AssetViewModel: ViewModel {
     private let assetId: String
-    @Published private(set) var asset: Asset?
+    private var asset: Asset?
+    private var imageUrl: String?
     @Published private(set) var image: Image?
     
     init(_ link: AssetLink, errorsViewModel: ErrorsViewModel) {
         self.assetId = link.id
+        self.imageUrl = nil
         super.init(errorsViewModel)
     }
     
     /**
-     Fetches the asset first, then uses that response to get the actual image data
+     A fetch is needed if we have an asset id, we're not currently loading, and we're either missing data or have incorrect data.
+     */
+    private var fetchIsNeeded: Bool {
+        let haveAsset = !assetId.isEmpty
+        let missingData = asset == nil || image == nil || imageUrl == nil
+        let wrongData = asset?.file.url != imageUrl
+        return haveAsset && (missingData || wrongData)
+    }
+    
+    /**
+     Resets and then newly fetches data
+     */
+    func resetAndFetch() {
+        self.asset = nil
+        self.image = nil
+        self.imageUrl = nil
+        self.fetchData()
+    }
+    
+    /**
+     Fetches the asset first, then uses that response to get the actual image data. Only fetches if necessary.
      */
     func fetchData() {
+        guard fetchIsNeeded else {
+            return
+        }
+        
         let publisher = NetworkManager.getDataTaskPublisher(
             forType: .asset(assetId: assetId)
         )
@@ -59,12 +85,14 @@ class AssetViewModel: ViewModel {
             // Platform specific decoding here
             if let nsImage = NSImage(data: imageData) {
                 self.image = Image(nsImage: nsImage)
+                self.imageUrl = asset.file.url
             } else {
                 self.addDecodeError()
             }
             #else
             if let uiImage = UIImage(data: imageData) {
                 self.image = Image(uiImage: uiImage)
+                self.imageUrl = asset.file.url
             } else {
                 self.addDecodeError()
             }

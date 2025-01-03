@@ -45,7 +45,7 @@ Goal is to have list of all media I've finished/currently consuming/wishlist, an
 - Fetch details automatically for image/etc when adding a new book
 - Descriptions pulled from web for the book too - probably via a just in time API, and maybe use this for cover image
 - Swap to using a different API method for images that doesn't result in too many request errors
-- Refetch book images if the asset url changes
+- Fix the cover image spinner not disappearing in certain cases
 
 ### Milestone C - Organization
 - Count/preview of currently in progress at top of sidebar list, maybe separated into thumbnails/counts by type?

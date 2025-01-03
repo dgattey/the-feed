@@ -117,17 +117,24 @@ extension Publisher where Output == Data, Failure == Error {
      */
     func retryOnTooManyRequests(maxRetries: Int, delay: TimeInterval) -> AnyPublisher<Data, Error> {
         self.catch { error -> AnyPublisher<Data, Error> in
-            if case NetworkError.tooManyRequests = error {
-                var attempts = 0
-                return self.delay(for: .seconds(delay), scheduler: RunLoop.current)
-                    .retry(maxRetries)
-                    .handleEvents(receiveOutput: { _ in attempts += 1 })
-                    .filter { _ in attempts < maxRetries }
-                    .eraseToAnyPublisher()
-            } else {
+            guard case NetworkError.tooManyRequests = error else {
                 // For other errors, just throw them
                 return Fail(error: error).eraseToAnyPublisher()
             }
+            
+            var attempts = 0
+            if (_isDebugAssertConfiguration()) {
+                Swift
+                    .print(
+                        "Too many requests, retrying \(maxRetries)x after \(delay) seconds: \(String(describing: self))"
+                    )
+                Swift.print("\n")
+            }
+            return self.delay(for: .seconds(delay), scheduler: RunLoop.current)
+                .retry(maxRetries)
+                .handleEvents(receiveOutput: { _ in attempts += 1 })
+                .filter { _ in attempts < maxRetries }
+                .eraseToAnyPublisher()
         }.eraseToAnyPublisher()
     }
 }

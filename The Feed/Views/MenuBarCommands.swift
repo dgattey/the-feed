@@ -20,7 +20,7 @@ struct MenuBarCommands: Commands {
     
     var refresh: some View {
         Button("Refresh data") {
-            NotificationCenter.default.post(name: .refreshData, object: nil)
+            NotificationCenter.default.postRefreshData()
         }
         .keyboardShortcut(KeyboardShortcut("r", modifiers: .command))
     }
@@ -30,6 +30,16 @@ struct MenuBarCommands: Commands {
             NotificationCenter.default.post(name: .deselectItem, object: nil)
         }
         .keyboardShortcut(KeyboardShortcut("d", modifiers: .command))
+    }
+}
+
+extension NotificationCenter {
+    
+    /**
+     Posts a refresh data signal for the whole app to purge and refresh its data
+     */
+    func postRefreshData() {
+        NotificationCenter.default.post(name: .refreshData, object: nil)
     }
 }
 
