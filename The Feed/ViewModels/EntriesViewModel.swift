@@ -13,44 +13,50 @@ import SwiftUI
  Fetches and parses all entries for the entire list of entries. Pagination built in and will automatically load all subsequent pages until we have no more entries left to load.
  */
 class EntriesViewModel: ViewModel {
-    @Published var groupedEntries: [GroupedEntries] = []
-    @Published var entries: [Entry] = []
+    @Published private var rawEntries: [Entry] = []
+    
     @Published var searchText: String = ""
     @Published var selectedTokens: [GroupedEntriesCategory] = []
-    @Published var suggestedTokens = GroupedEntriesCategory.allCases.filter { category in
-        // Remove all case
-        return category != GroupedEntriesCategory.all
+    @Published var suggestedTokens = Array(GroupedEntriesCategory.allCases)
+    
+    /**
+     Currently applied category filters, from selected/suggested tokens
+     */
+    private var categoryFilters: Set<GroupedEntriesCategory> {
+        if selectedTokens.isEmpty {
+            return Set(suggestedTokens)
+        }
+        return Set(selectedTokens)
     }
     
-    var filteredGroupedEntries: [GroupedEntries] {
-        guard !searchText.isEmpty else {
-            return groupedEntries
-        }
-        return groupedEntries.compactMap { group in
-            // Hide categories that don't match current tokens
-            if (selectedTokens.count > 0 && !selectedTokens.contains(group.category)) {
-                return nil
-            }
-            // Return the whole group if the group name contains search term
-            if (group.category.contains(searchText: searchText)) {
-                return group
-            }
-            
-            // Filter entries for the current group
-            let filteredEntries = group.entries.filter { entry in
-                entry.contains(searchText: searchText, withCategories: selectedTokens)
-            }
-            
-            // Only return groups that have matching entries
-            return filteredEntries.isEmpty ? nil : GroupedEntries(
-                category: group.category,
-                entries: filteredEntries
-            )
-        }
+    /**
+     Applies sort & filter logic to all entries while still allowing binding
+     */
+    var filtered: [Entry] {
+        rawEntries
+            .filtered(byCategories: categoryFilters, searchText: searchText)
+            .sorted
     }
     
-    var filteredEntries: [Entry] {
-        return entries.filter { $0.contains(searchText: searchText, withCategories: selectedTokens) }
+    /**
+     Applies sort & filter logic to all enabled groups holding the entries
+     */
+    var groupedAndFiltered: [GroupedEntries] {
+        self.categoryFilters
+            .map { category in
+                let entriesForGroup = rawEntries
+                    .filtered(byCategories: [category], searchText: searchText)
+                    .sorted
+                return GroupedEntries(category: category, entries: entriesForGroup)
+            }
+            .compactMap { $0.entries.isEmpty ? nil : $0 }
+    }
+    
+    /**
+     Use to check if we should show a "no results" view
+     */
+    var hasNoResults: Bool {
+        filtered.isEmpty && !searchText.isEmpty
     }
     
     /**
@@ -76,49 +82,26 @@ class EntriesViewModel: ViewModel {
             // Update entries depending on our current skip and then set grouped from it
             withAnimation {
                 if (entriesResponse.skip == 0) {
-                    self.entries = entriesResponse.items
+                    self.rawEntries = entriesResponse.items
                 } else {
-                    self.entries += entriesResponse.items
+                    self.rawEntries += entriesResponse.items
                 }
-                self.groupedEntries = EntriesViewModel.groupedEntries(fromResponse: self.entries)
             }
         }
     }
     
     /**
-     Groups and filters entries - by default uses all entries from `GroupedEntriesCategory` except `.all` and orders them the same way
+     Call this from an update for a binding so that we can update the base entry model when we make changes.
      */
-    private static func groupedEntries(fromResponse entries: [Entry]) -> [GroupedEntries] {
-        GroupedEntriesCategory
-            .allCases
-            .filter { $0 != .all }
-            .map { category in
-                let filteredEntries = entries.filter { entry in
-                    switch entry {
-                    case .book:
-                        return category == .book
-                    case .location:
-                        return category == .location
-                    case .textBlock:
-                        return category == .textBlock
-                    }
-                }
-                    .sorted { e1, e2 in
-                        switch (e1, e2) {
-                        case (.book(let b1), .book(let b2)):
-                            let b1Date: Date? = b1.readDateFinished ?? b1.readDateStarted ?? b1.sysContent.createdAt
-                            let b2Date: Date? = b2.readDateFinished ?? b2.readDateStarted ?? b2.sysContent.createdAt
-                            if let b1Date = b1Date, let b2Date = b2Date {
-                                return b1Date > b2Date
-                            }
-                            return b1.id < b2.id
-                        case (.location(let l1), .location(let l2)):
-                            return l1.slug < l2.slug
-                        default:
-                            return e1.id < e2.id
-                        }
-                    }
-                return GroupedEntries(category: category, entries: filteredEntries)
-            }
+    func update(with newEntry: Entry) {
+        let index = rawEntries.firstIndex(where: {
+            $0.id == newEntry.id
+        })
+        guard let index else {
+            print("Couldn't find \(newEntry.id), appending")
+            rawEntries.append(newEntry)
+            return
+        }
+        rawEntries[index] = newEntry
     }
 }

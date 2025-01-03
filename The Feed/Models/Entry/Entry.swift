@@ -39,6 +39,9 @@ enum Entry: SearchableModel & IdentifiableModel {
     }
     
     func contains(searchText: String) -> Bool {
+        if category.contains(searchText: searchText) {
+            return true
+        }
         switch (self) {
         case .book(let book): return book.contains(searchText: searchText)
         case .location(let location): return location.contains(searchText: searchText)
@@ -113,5 +116,56 @@ enum Entry: SearchableModel & IdentifiableModel {
             try container.encode(textBlock)
         }
     }
+}
+
+/**
+ Adds some grouping/sorting/filtering to arrays of entries
+ */
+extension [Entry] {
+    /**
+     Applies a sort to the list, using dates if available, otherwise ids and such
+     */
+    var sorted: [Entry] {
+        self.sorted { e1, e2 in
+            switch (e1, e2) {
+            case (.book(let b1), .book(let b2)):
+                let b1Date: Date? = b1.readDateFinished ?? b1.readDateStarted ?? b1.sysContent.createdAt
+                let b2Date: Date? = b2.readDateFinished ?? b2.readDateStarted ?? b2.sysContent.createdAt
+                if let b1Date = b1Date, let b2Date = b2Date {
+                    return b1Date > b2Date
+                }
+                return b1.id < b2.id
+            case (.location(let l1), .location(let l2)):
+                return l1.slug < l2.slug
+            default:
+                return e1.id < e2.id
+            }
+        }
+    }
     
+    /**
+     Applies category filters to the list
+     */
+    func filtered(
+        byCategories categories: Set<GroupedEntriesCategory>,
+        searchText: String?
+    ) -> [Entry] {
+        let filteredByCategories = self.filter { entry in
+            switch entry {
+            case .book:
+                return categories.contains(.book)
+            case .location:
+                return categories.contains(.location)
+            case .textBlock:
+                return categories.contains(.textBlock)
+            }
+        }
+        
+        // Apply search text filter
+        if let searchText, !searchText.isEmpty {
+            return filteredByCategories
+                .filter { $0.contains(searchText: searchText) }
+        }
+        return filteredByCategories
+    }
 }

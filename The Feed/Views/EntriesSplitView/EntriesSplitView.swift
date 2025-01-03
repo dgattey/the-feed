@@ -21,7 +21,8 @@ struct EntriesSplitView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             NavigationSplitView {
-                EntriesListView(viewModel: viewModel, selectedEntry: $selectedEntry)
+                EntriesListView(selectedEntry: $selectedEntry)
+                    .environmentObject(viewModel)
                     .navigationSplitViewColumnWidth(min: 200, ideal: 300)
             } detail: {
                 entryDetail

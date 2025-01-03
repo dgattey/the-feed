@@ -18,32 +18,19 @@ fileprivate struct Constants {
 }
 
 struct EntriesListView: View {
-    @ObservedObject var viewModel: EntriesViewModel
     @Binding var selectedEntry: Entry?
     @State var hoveredEntry: Entry?
     @EnvironmentObject var errorsViewModel: ErrorsViewModel
+    @EnvironmentObject var viewModel: EntriesViewModel
     
     var body: some View {
         List(selection: $selectedEntry) {
-            ForEach(viewModel.filteredGroupedEntries) { group in
+            ForEach(viewModel.groupedAndFiltered) { group in
                 EntriesListSectionView(
                     selectedEntry: $selectedEntry,
                     hoveredEntry: $hoveredEntry,
-                    group: Binding(
-                        get: { group },
-                        set: { newGroup in
-                            let index = viewModel.groupedEntries.firstIndex(of: group)
-                            if let index {
-                                withAnimation {
-                                    viewModel.groupedEntries[index] = newGroup
-                                }
-                            } else {
-                                withAnimation {
-                                    viewModel.groupedEntries.append(newGroup)
-                                }
-                            }
-                        }
-                    )
+                    category: group.category,
+                    entries: group.entries
                 )
             }
             

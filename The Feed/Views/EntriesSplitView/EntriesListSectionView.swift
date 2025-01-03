@@ -13,13 +13,20 @@ import SwiftUI
 struct EntriesListSectionView: View {
     @Binding var selectedEntry: Entry?
     @Binding var hoveredEntry: Entry?
-    @Binding var group: GroupedEntries
+    var category: GroupedEntriesCategory
+    var entries: [Entry]
+    
+    @EnvironmentObject var viewModel: EntriesViewModel
     
     var body: some View {
-        Section(header: Text(group.id)) {
-            ForEach($group.entries) { $entry in
+        Section(header: Text(category.id)) {
+            ForEach(entries) { entry in
                 EntriesListItemView(
-                    entry: $entry,
+                    entry: Binding(get: {
+                        entry
+                    }, set: { newEntry in
+                        viewModel.update(with: entry)
+                    }),
                     selectedEntry: $selectedEntry,
                     hoveredEntry: $hoveredEntry
                 )

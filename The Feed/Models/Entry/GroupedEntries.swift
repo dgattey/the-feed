@@ -6,14 +6,13 @@
 //
 
 enum GroupedEntriesCategory: String, SearchableModel, IdentifiableModel {
-    case all = "All"
     case book = "Books"
     case location = "Locations"
     case textBlock = "Text blocks"
     
     var id: String { rawValue }
     
-    static var allCases: Array<GroupedEntriesCategory> = [
+    static var allCases: Set<GroupedEntriesCategory> = [
         .book
     ]
     
