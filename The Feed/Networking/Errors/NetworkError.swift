@@ -30,13 +30,10 @@ enum NetworkError: Error, LocalizedError {
         switch self {
         case .clientError(let message, let status):
             return "\(status): \(message)"
-        case .redirectionError(let message):
-            fallthrough
-        case .unauthorized(let message):
-            fallthrough
-        case .tooManyRequests(let message):
-            fallthrough
-        case .serverError(let message):
+        case .redirectionError(let message),
+                .unauthorized(let message),
+                .tooManyRequests(let message),
+                .serverError(let message):
             return message
         case .decodingError(let error):
             switch(error) {
@@ -75,9 +72,7 @@ enum NetworkError: Error, LocalizedError {
                 .redirectionError(
                     "Redirection occurred with status code \(httpResponse.statusCode)."
                 )
-        case 401:
-            fallthrough
-        case 403:
+        case 401, 403:
             if let errorMessage = try? JSONDecoder().decode(ServerError.self, from: output.data) {
                 throw NetworkError.clientError(errorMessage.message, status: httpResponse.statusCode)
             } else {
