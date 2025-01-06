@@ -81,8 +81,12 @@ struct EntriesSplitView: View {
                 ScrollView {
                     EntryDetailView()
                 }
+                
+#if os(macOS)
+                // Don't show feed at all on iOS
                 MainFeedView()
                     .environmentObject(CurrentSurface(.feed))
+#endif
             }
             .frame(maxWidth: .infinity, alignment: .top)
             

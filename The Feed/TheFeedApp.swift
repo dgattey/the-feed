@@ -33,7 +33,7 @@ struct TheFeedApp: App {
                     window.isOpaque = false
                     window.backgroundColor = NSColor(Color.clear)
                 }
-                .background(.ultraThinMaterial)
+                .background(.thinMaterial)
             #endif
         }
         .commands {

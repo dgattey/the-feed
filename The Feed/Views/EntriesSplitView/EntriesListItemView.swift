@@ -102,15 +102,12 @@ struct EntriesListItemView: View {
                 )
             }
         }
-        #if os(macOS)
-        // We don't show background highlight on iOS
         .foregroundStyle(
             state.isHovered(for: currentSurface) || state.isSelected
             ? .accentForeground
             : .foreground
         )
         .background(highlightIndicator)
-        #endif
     }
     
     /**

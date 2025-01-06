@@ -44,7 +44,7 @@ struct ErrorsView: View {
             .offset(y: errors.hasErrors ? 0 : maxHeight)
             #if os(iOS)
             // Layout specific to iOS (otherwise overflows on macOS)
-            .safeAreaPadding(.bottom, 16)
+            .safeAreaPadding(.bottom, errors.hasErrors ? 16 : 0)
             .clipped()
             #endif
         }
