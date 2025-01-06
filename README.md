@@ -33,8 +33,6 @@ There's a cache that persists between app launches so it can show data from last
 Goal is to have list of all media I've finished/currently consuming/wishlist, and allow for surfacing my best recommendations for others
 
 ### Milestone A - Basics
-- Feed of all books in main screen
-- Fix memory leak on refresh
 - Viewing book details
 - Editing book details
 - "Start reading" a new book (i.e. add a new book)
@@ -61,3 +59,4 @@ Goal is to have list of all media I've finished/currently consuming/wishlist, an
 - Add movies & TV shows to Contentful models & backfill as many as possible I can remember
 - Editing/viewing of website things & a "website mode" vs "media mode" for whole app
 - Quick switcher
+- Offline queue - https://www.perplexity.ai/search/how-do-i-implement-an-offline-ErR.tz6YTLuKxVA.ctFfFg

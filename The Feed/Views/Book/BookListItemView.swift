@@ -31,15 +31,17 @@ struct BookListItemView: View {
             GridRow {
                 CoverImageView(
                     with: book,
+                    size: .thumb,
                     errorsViewModel
                 )
                 
                 Grid(alignment: .leadingFirstTextBaseline, verticalSpacing: 4) {
                     GridRow {
                         Text(book.title).font(.headline)
+                            .padding(.bottom, 2)
                     }
                     GridRow {
-                        Text(book.author).font(.subheadline)
+                        Text(book.author).font(.caption)
                     }
                     GridRow {
                         if let readDateFinished = book.readDateFinished {
@@ -50,7 +52,7 @@ struct BookListItemView: View {
                             Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
                         }
                     }
-                    .font(.subheadline)
+                    .font(.caption2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, state.isHovered(for: currentSurface) || state.isSelected ? 4 : 0)

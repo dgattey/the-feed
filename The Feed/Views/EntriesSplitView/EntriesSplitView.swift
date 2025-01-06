@@ -62,11 +62,9 @@ struct EntriesSplitView: View {
         .frame(minHeight: Constants.minHeight)
         .onAppear {
             Task {
-                withAnimation {
-                    let queue = DispatchQueue.global(qos: .utility)
-                    queue.async {
-                        viewModel.fetchData()
-                    }
+                let queue = DispatchQueue.global(qos: .utility)
+                queue.async {
+                    viewModel.fetchData()
                 }
             }
         }
@@ -77,18 +75,9 @@ struct EntriesSplitView: View {
      */
     private var scrollableDetailPane: some View {
         ZStack {
-            Group {
-                ScrollView {
-                    EntryDetailView()
-                }
-                
-#if os(macOS)
-                // Don't show feed at all on iOS
-                MainFeedView()
-                    .environmentObject(CurrentSurface(.feed))
-#endif
-            }
-            .frame(maxWidth: .infinity, alignment: .top)
+            MainFeedView()
+                .environmentObject(CurrentSurface(.feed))
+                .frame(maxWidth: .infinity, alignment: .top)
             
             macTitleBarBackground
         }

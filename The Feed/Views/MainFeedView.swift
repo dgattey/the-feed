@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+fileprivate struct Constants {
+    static let maxWidth: CGFloat = 600
+    static let interItemSpacing: CGFloat = 16
+    static let horizontalPadding: CGFloat = 24
+    static let topOfPage = "topOfPageId"
+}
+
 struct MainFeedView: View {
     @EnvironmentObject var viewModel: EntriesViewModel
     
@@ -15,15 +22,10 @@ struct MainFeedView: View {
      */
     var body: some View {
         Group {
-            if viewModel.selected != nil {
-                EmptyView()
-            } else {                
-                if viewModel.hasNoResults {
-                    NoResultsView(searchText: viewModel.searchText, layout: .withIcon)
-                } else {
-                    feedOfEntries
-                }
+            if viewModel.hasNoResults {
+                NoResultsView(searchText: viewModel.searchText, layout: .withIcon)
             }
+            feedOfEntries
         }
         .onHover { isHovered in
             // Clear when leaving the view
@@ -36,46 +38,55 @@ struct MainFeedView: View {
     }
     
     var feedOfEntries: some View {
-        List(selection: $viewModel.selected) {
-            Spacer()
-            ForEach(viewModel.filtered) { entry in
-                ZStack {
-                    EntryCardView(entry: Binding(get: {
-                        entry
-                    }, set: { newEntry in
-                        viewModel.update(with: newEntry)
-                    }))
-                    
+        ScrollViewReader { scrollProxy in
+            List(selection: $viewModel.selected) {
+                Group {
+                    Spacer().id(Constants.topOfPage)
+                    VStack(spacing: Constants.interItemSpacing) {
+                        EntryDetailView()
+                        ForEach(viewModel.filtered) { entry in
+                            ZStack {
+                                EntryCardView(entry: Binding(get: {
+                                    entry
+                                }, set: { newEntry in
+                                    viewModel.update(with: newEntry)
+                                }))
+                                
 #if os(macOS)
-                    // Not available on iOS!
-                    CustomCursorView()
+                                // Not available on iOS!
+                                CustomCursorView()
 #endif
+                            }
+                            .padding(.horizontal, Constants.horizontalPadding)
+                            .frame(maxWidth: Constants.maxWidth)
+                            .onTapGesture {
+                                // Animates both the detail view swap + the items in the item list going back to normal. We want to make this smooth otherwise there's weird artifacts on the detail view bouncing around.
+                                withAnimation(.smooth) {
+                                    viewModel.selected = entry
+                                    scrollProxy.scrollTo(Constants.topOfPage)
+                                }
+                            }
+                            .onHover { isHovered in
+                                withAnimation {
+                                    viewModel.setHovered(
+                                        isHovered
+                                        ? .valid(entry, surface: .feed)
+                                        : .none
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer()
                 }
-                .frame(maxWidth: 400)
+                .background(.clear)
+                .containerRelativeFrame(.horizontal, alignment: .center)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                .onTapGesture {
-                    // Animates both the detail view swap + the items in the item list going back to normal. We want to make this smooth otherwise there's weird artifacts on the detail view bouncing around.
-                    withAnimation(.smooth) {
-                        viewModel.selected = entry
-                    }
-                }
-                .onHover { isHovered in
-                    withAnimation {
-                        viewModel.setHovered(
-                            isHovered
-                            ? .valid(entry, surface: .feed)
-                            : .none
-                        )
-                    }
-                }
-                
             }
-            .containerRelativeFrame(.horizontal, alignment: .center)
-            Spacer()
         }
         .listStyle(.plain)
+        .background(.clear)
         .scrollContentBackground(.hidden)
 #if os(iOS)
         // Reset for styling

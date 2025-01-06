@@ -12,6 +12,7 @@ import SwiftUI
  */
 struct CardView: View {
     private let hasClearBackground: Bool
+    private let showsSelection: Bool
     private let state: ItemHighlightState
     @EnvironmentObject private var currentSurface: CurrentSurface
     
@@ -19,20 +20,28 @@ struct CardView: View {
         state.isHovered(for: currentSurface)
     }
     
+    private var isSelected: Bool {
+        showsSelection && state.isSelected
+    }
+    
     /**
      Creates a card that shows on hover/
      */
-    init(hasClearBackground: Bool = true, _ state: ItemHighlightState) {
+    init(hasClearBackground: Bool = true,
+         _ state: ItemHighlightState,
+         showsSelection: Bool = true
+    ) {
         self.hasClearBackground = hasClearBackground
+        self.showsSelection = showsSelection
         self.state = state
     }
     
     private var fillColor: Color {
-        if state.isSelected || isHovered {
+        if isSelected || isHovered {
             return .backgroundAccent
         }
         if !hasClearBackground {
-            return .cardBackground
+            return .backgroundCard
         }
         return .clear
     }
@@ -41,14 +50,14 @@ struct CardView: View {
         if isHovered {
             return .cardShadowHovered
         }
-        if !hasClearBackground || state.isSelected {
+        if !hasClearBackground || isSelected {
             return .cardShadow
         }
         return .clear
     }
     
     private var separatorWidth: CGFloat {
-        if !hasClearBackground || state.isSelected || isHovered {
+        if !hasClearBackground || isSelected || isHovered {
             return 0.5
         }
         return 0

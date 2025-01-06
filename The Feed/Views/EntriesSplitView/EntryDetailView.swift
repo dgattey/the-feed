@@ -26,6 +26,6 @@ struct EntryDetailView: View {
                 EmptyView()
             }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

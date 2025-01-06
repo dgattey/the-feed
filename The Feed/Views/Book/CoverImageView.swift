@@ -15,15 +15,22 @@ fileprivate struct Constants {
     
 #if os(macOS)
     static let minWidth: CGFloat = 40
-    static let maxWidth: CGFloat = 64
+    static let maxWidthThumb: CGFloat = 64
+    static let maxWidthCard: CGFloat = 80
     static let maxErrorImageHeight: CGFloat = 40
     static let nonImageGridCellColumns = 4
 #else
     static let minWidth: CGFloat = 32
-    static let maxWidth: CGFloat = 44
+    static let maxWidthThumb: CGFloat = 44
+    static let maxWidthCard: CGFloat = 64
     static let maxErrorImageHeight: CGFloat = 36
     static let nonImageGridCellColumns = 5
 #endif
+}
+
+enum CoverImageSize {
+    case thumb
+    case card
 }
 
 /**
@@ -31,14 +38,17 @@ fileprivate struct Constants {
  */
 struct CoverImageView: View {
     let book: Book
+    let size: CoverImageSize
     @StateObject private var viewModel: AssetViewModel
     @EnvironmentObject private var entriesViewModel: EntriesViewModel
     @EnvironmentObject private var currentSurface: CurrentSurface
     
     init(with book: Book,
+         size: CoverImageSize,
          _ errorsViewModel: ErrorsViewModel
     ) {
         self.book = book
+        self.size = size
         _viewModel = StateObject(
             wrappedValue:
                 AssetViewModel(book.coverImage, errorsViewModel: errorsViewModel))
@@ -80,7 +90,12 @@ struct CoverImageView: View {
                 .foregroundStyle(Color.foreground)
         )
         .aspectRatio(Constants.aspectRatio, contentMode: .fill)
-        .frame(minWidth: Constants.minWidth, maxWidth: Constants.maxWidth)
+        .frame(minWidth: Constants.minWidth, maxWidth: {
+            switch size {
+            case .card: return Constants.maxWidthCard
+            case .thumb: return Constants.maxWidthThumb
+            }
+        }())
         .rotationEffect(
             state
                 .isHovered(for: currentSurface) && !state.isSelected ?
@@ -99,7 +114,11 @@ struct CoverImageView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .refreshData)) { _ in
-            viewModel.resetAndFetch()
+            DispatchQueue.main.async {
+                withAnimation {
+                    viewModel.resetAndFetch()
+                }
+            }
         }
     }
 }

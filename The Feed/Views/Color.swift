@@ -16,7 +16,7 @@ extension Color {
     /*
      A color slightly more background color than accent color, used for backgrounds with accents
      */
-    static let cardBackground = Color.accentColor.mix(with: Color.background, by: 0.8)
+    static let backgroundCard = Color.accentColor.mix(with: Color.backgroundGlass, by: 0.8)
     
     /**
      A semi-transparent background color to allow glass backgrounds to show through with transparency. Use sparingly for blending/perf.

@@ -33,7 +33,11 @@ struct EntriesListView: View {
             .scrollContentBackground(.hidden)
             .background(Color.backgroundGlass)
             .refreshable {
-                resetAndFetch()
+                DispatchQueue.main.async {
+                    withAnimation {
+                        resetAndFetch()
+                    }
+                }
             }
             .navigationTitle("The Feed")
             .frame(alignment: .top)

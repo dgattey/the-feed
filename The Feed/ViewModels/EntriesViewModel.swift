@@ -22,12 +22,16 @@ class EntriesViewModel: ViewModel {
         willSet {
             // Clear selected if it will no longer be valid
             if let selected, !newValue.contains(where: { $0.id == selected.id }) {
-                self.selected = nil
+                withAnimation(.smooth) {
+                    self.selected = nil
+                }
             }
             
             // Clear hovered if it will no longer be valid
             if let hovered, !newValue.contains(where: { $0.id == hovered.id }) {
-                self.hovered = nil
+                withAnimation(.smooth) {
+                    self.hovered = nil
+                }
             }
         }
     }
@@ -126,8 +130,10 @@ class EntriesViewModel: ViewModel {
                 Task {
                     self.fetchData(withPagination: pagination.next())
                 }
-            } else if dataSource.origin == .network {
-                self.isLoading = false
+            } else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
             }
             
             // Update entries depending on our current skip and then set grouped from it

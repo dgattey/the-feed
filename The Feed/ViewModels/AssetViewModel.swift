@@ -43,7 +43,10 @@ class AssetViewModel: ViewModel {
         self.asset = nil
         self.image = nil
         self.imageUrl = nil
-        self.fetchData()
+        let queue = DispatchQueue.global(qos: .utility)
+        queue.async {
+            self.fetchData()
+        }
     }
     
     /**
@@ -62,8 +65,10 @@ class AssetViewModel: ViewModel {
             if (self.asset == nil || self.asset?.id != asset.id) {
                 self.asset = asset
                 self.fetchImage(asset)
-            } else if dataSource.origin == .network {
-                self.isLoading = false
+            } else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
             }
         }
     }
@@ -98,7 +103,7 @@ class AssetViewModel: ViewModel {
             }
             #endif
             
-            if dataSource.origin == .network {
+            DispatchQueue.main.async {
                 self.isLoading = false
             }
         }
