@@ -11,10 +11,9 @@ import SwiftUI
  Shows a section in the list view for entries - shows a group name and entries below.
  */
 struct EntriesListSectionView: View {
-    @Binding var selectedEntry: Entry?
-    @Binding var hoveredEntry: Entry?
     var category: GroupedEntriesCategory
     var entries: [Entry]
+    var scrollProxy: ScrollViewProxy
     
     @EnvironmentObject var viewModel: EntriesViewModel
     
@@ -22,13 +21,11 @@ struct EntriesListSectionView: View {
         Section(header: Text(category.id)) {
             ForEach(entries) { entry in
                 EntriesListItemView(
-                    entry: Binding(get: {
-                        entry
-                    }, set: { newEntry in
-                        viewModel.update(with: entry)
-                    }),
-                    selectedEntry: $selectedEntry,
-                    hoveredEntry: $hoveredEntry
+                    entry: Binding(
+                        get: { entry },
+                        set: { viewModel.update(with: $0) }
+                    ),
+                    scrollProxy: scrollProxy
                 )
             }
         }

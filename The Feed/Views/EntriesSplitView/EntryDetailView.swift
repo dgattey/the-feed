@@ -11,16 +11,18 @@ import SwiftUI
  Shows the detail view for each item
  */
 struct EntryDetailView: View {
-    @Binding var entry: Entry
+    @EnvironmentObject var viewModel: EntriesViewModel
     
     var body: some View {
-        switch entry {
+        switch viewModel.selected {
         case .book(let book):
             BookDetailView(book: book)
         case .location(let location):
             LocationDetailView(location: location)
         case .textBlock(let textBlock):
             TextBlockDetailView(textBlock: textBlock)
+        case nil:
+            EmptyView()
         }
     }
 }

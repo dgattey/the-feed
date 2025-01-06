@@ -13,11 +13,43 @@ import SwiftUI
  Fetches and parses all entries for the entire list of entries. Pagination built in and will automatically load all subsequent pages until we have no more entries left to load.
  */
 class EntriesViewModel: ViewModel {
-    @Published private var rawEntries: [Entry] = []
+    enum HoveredEntry {
+        case valid(_ entry: Entry, surface: Surface)
+        case none
+    }
+    
+    @Published private var rawEntries: [Entry] = [] {
+        willSet {
+            // Clear selected if it will no longer be valid
+            if let selected, !newValue.contains(where: { $0.id == selected.id }) {
+                self.selected = nil
+            }
+            
+            // Clear hovered if it will no longer be valid
+            if let hovered, !newValue.contains(where: { $0.id == hovered.id }) {
+                self.hovered = nil
+            }
+        }
+    }
     
     @Published var searchText: String = ""
     @Published var selectedTokens: [GroupedEntriesCategory] = []
     @Published var suggestedTokens = Array(GroupedEntriesCategory.allCases)
+    
+    /**
+     Currently selected entry
+     */
+    @Published var selected: Entry? = nil
+    
+    /**
+     Currently hovered entry
+     */
+    @Published private(set) var hovered: Entry? = nil
+    
+    /**
+     If hovered, which list
+     */
+    @Published private(set) var hoveredSurface: Surface? = nil
     
     /**
      Currently applied category filters, from selected/suggested tokens
@@ -60,6 +92,25 @@ class EntriesViewModel: ViewModel {
     }
     
     /**
+     Computed based off current hovered/selected and raw entry state
+     */
+    var states: [String: ItemHighlightState] {
+        Dictionary(uniqueKeysWithValues: rawEntries.map { entry in
+            let isHovered = hovered?.id == entry.id
+            let isSelected = selected?.id == entry.id
+            return (
+                entry.id,
+                ItemHighlightState(
+                    isHovered: isHovered,
+                    isSelected: isSelected,
+                    surface: hoveredSurface
+                )
+            )
+        }
+)
+    }
+    
+    /**
      Fetches data with optional limit/skip
      */
     func fetchData(withPagination pagination: Pagination = .default) {
@@ -91,6 +142,20 @@ class EntriesViewModel: ViewModel {
     }
     
     /**
+     Sets the hovered entry + surface together
+     */
+    func setHovered(_ hoveredEntry: HoveredEntry) {
+        switch hoveredEntry {
+        case .none:
+            self.hovered = nil
+            self.hoveredSurface = nil
+        case .valid(let entry, let surface):
+            self.hovered = entry
+            self.hoveredSurface = surface
+        }
+    }
+    
+    /**
      Call this from an update for a binding so that we can update the base entry model when we make changes.
      */
     func update(with newEntry: Entry) {
@@ -103,5 +168,15 @@ class EntriesViewModel: ViewModel {
             return
         }
         rawEntries[index] = newEntry
+        
+        // Clear selected if it will no longer be valid
+        if let selected, selected.id == newEntry.id {
+            self.selected = nil
+        }
+        
+        // Clear hovered if it will no longer be valid
+        if let hovered, hovered.id == newEntry.id {
+            self.hovered = nil
+        }
     }
 }

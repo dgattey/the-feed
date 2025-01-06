@@ -17,39 +17,21 @@ private let horizontalPadding: CGFloat = 6
  */
 struct EntriesListItemView: View {
     @Binding var entry: Entry
-    @Binding var selectedEntry: Entry?
-    @Binding var hoveredEntry: Entry?
-    @EnvironmentObject var errorsViewModel: ErrorsViewModel
-    
-    enum ViewState {
-        case normal
-        case hovered
-        case selected
-        case hoveredAndSelected
-    }
-    
-    private var state: ViewState {
-        switch (isHovered, isSelected) {
-        case (true, true): return .hoveredAndSelected
-        case (true, false): return .hovered
-        case (false, true): return .selected
-        case (false, false): return .normal
-        }
-    }
-    
-    private var isHovered: Bool {
-        return hoveredEntry?.id == entry.id
-    }
-    
-    private var isSelected: Bool {
-        return selectedEntry?.id == entry.id
-    }
+    var scrollProxy: ScrollViewProxy
+    @EnvironmentObject private var errorsViewModel: ErrorsViewModel
+    @EnvironmentObject private var entriesViewModel: EntriesViewModel
+    @EnvironmentObject private var currentSurface: CurrentSurface
+
+    /**
+     Current highlight state for this item
+     */
+    private var state: ItemHighlightState { entriesViewModel.states[entry.id]! }
     
     /**
      Offset the padding for the whole item when a book and selected, otherwise just show up the same as normal item padding.
      */
     private var verticalPadding: CGFloat {
-        switch (entry.category, isSelected) {
+        switch (entry.category, state.isSelected) {
         case (.book, false):
             return 4
         default:
@@ -61,7 +43,7 @@ struct EntriesListItemView: View {
      Only books change leading padding when not selected, to hide it behind the cover image.
      */
     private var leadingPadding: CGFloat {
-        switch (entry.category, isSelected) {
+        switch (entry.category, state.isSelected) {
         case (.book, false):
             return 4
         default:
@@ -79,18 +61,7 @@ struct EntriesListItemView: View {
             NavigationLink(value: entry) {
                 switch entry {
                 case .book(let book):
-                    BookListItemView(
-                        with: book,
-                        andWrappingEntry: $entry,
-                        Binding(
-                            get: {
-                                state
-                            }, set: { newState, _ in
-                                
-                            }
-                        ),
-                        errorsViewModel
-                    )
+                    BookListItemView(book: book)
                 case .location(let location):
                     LocationListItemView(location: location)
                 case .textBlock(let textBlock):
@@ -107,27 +78,37 @@ struct EntriesListItemView: View {
                 .padding(-interItemSpacing)
             #endif
         }
+        .onChange(of: entriesViewModel.selected) {
+            // Scroll the list to the selected item if it was selected elsewhere
+            if entriesViewModel.selected?.id == entry.id {
+                withAnimation {
+                    scrollProxy.scrollTo(entry.id)
+                }
+            }
+        }
         .listRowBackground(Color.clear)
         .onTapGesture {
             // Animates both the detail view swap + the items in the item list going back to normal. We want to make this smooth otherwise there's weird artifacts on the detail view bouncing around.
             withAnimation(.smooth) {
-                selectedEntry = entry
+                entriesViewModel.selected = entry
             }
         }
         .onHover { isHovered in
-            if isHovered && hoveredEntry?.id != entry.id {
-                withAnimation {
-                    hoveredEntry = entry
-                }
-            } else if !isHovered && hoveredEntry?.id == entry.id {
-                withAnimation {
-                    hoveredEntry = nil
-                }
+            withAnimation {
+                entriesViewModel.setHovered(
+                    isHovered
+                    ? .valid(entry, surface: .sidebar)
+                    : .none
+                )
             }
         }
         #if os(macOS)
         // We don't show background highlight on iOS
-        .foregroundStyle(isHovered || isSelected ? .accentForeground : .foreground)
+        .foregroundStyle(
+            state.isHovered(for: currentSurface) || state.isSelected
+            ? .accentForeground
+            : .foreground
+        )
         .background(highlightIndicator)
         #endif
     }
@@ -136,17 +117,10 @@ struct EntriesListItemView: View {
      On platforms that show a highlight (just macOS), this view can be the background behind the view
      */
     var highlightIndicator: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill({
-                if isSelected || isHovered {
-                    return Color.backgroundAccent
-                }
-                return Color.clear
-            }())
-            .frame(maxHeight: isSelected ? .infinity : 60)
-            .padding(.vertical, verticalPadding)
-            .padding(.leading, leadingPadding)
-            .padding(.trailing, trailingPadding)
-            .animation(.snappy(duration: 0.2), value: state)
+        CardView(state)
+        .padding(.vertical, verticalPadding)
+        .padding(.leading, leadingPadding)
+        .padding(.trailing, trailingPadding)
+        .animation(.snappy(duration: 0.2), value: state)
     }
 }

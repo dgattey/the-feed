@@ -49,7 +49,7 @@ struct NoResultsView: View {
                 .frame(width: 128, height: 128)
                 .overlay(content: {
                     Image(systemName: "questionmark")
-                        .font(.largeTitle)
+                        .font(.system(size: 72, weight: .bold, design: .rounded))
                         .foregroundStyle(.accentForeground)
                 })
             Text("Nothing here")

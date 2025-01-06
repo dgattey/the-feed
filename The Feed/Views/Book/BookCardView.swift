@@ -1,8 +1,8 @@
 //
-//  BookListItemView.swift
+//  BookCardView.swift
 //  The Feed
 //
-//  Created by Dylan Gattey on 12/23/24.
+//  Created by Dylan Gattey on 12/31/24.
 //
 
 import SwiftUI
@@ -18,10 +18,9 @@ fileprivate struct Constants {
 /**
  Shows a single book item for a list item view
  */
-struct BookListItemView: View {
+struct BookCardView: View {
     let book: Book
     @EnvironmentObject private var errorsViewModel: ErrorsViewModel
-    @EnvironmentObject private var currentSurface: CurrentSurface
     @EnvironmentObject private var viewModel: EntriesViewModel
     
     private var state: ItemHighlightState { viewModel.states[book.id]! }
@@ -53,9 +52,10 @@ struct BookListItemView: View {
                     .font(.subheadline)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, state.isHovered(for: currentSurface) || state.isSelected ? 4 : 0)
                 .gridCellColumns(Constants.nonImageGridCellColumns)
             }
         }
+        .padding()
+        .background(CardView(hasClearBackground: false, state))
     }
 }

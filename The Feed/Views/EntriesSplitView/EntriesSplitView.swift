@@ -21,7 +21,6 @@ fileprivate struct Constants {
  */
 struct EntriesSplitView: View {
     @StateObject private var viewModel: EntriesViewModel
-    @State private var selectedEntry: Entry? = nil
     
     init(_ errorsViewModel: ErrorsViewModel) {
         _viewModel = StateObject(wrappedValue: EntriesViewModel(errorsViewModel))
@@ -30,8 +29,9 @@ struct EntriesSplitView: View {
     var body: some View {
         VStack(spacing: 0) {
             NavigationSplitView {
-                EntriesListView(selectedEntry: $selectedEntry)
+                EntriesListView()
                     .navigationSplitViewColumnWidth(min: Constants.minListWidth, ideal: Constants.idealListWidth)
+                    .environmentObject(CurrentSurface(.sidebar))
             } detail: {
                 scrollableDetailPane
                     .navigationSplitViewColumnWidth(min: Constants.minDetailWidth, ideal: Constants.idealDetailWidth)
@@ -41,12 +41,28 @@ struct EntriesSplitView: View {
             
             ErrorsView()
         }
+        .onKeyPress(.escape) {
+            DispatchQueue.main.async {
+                withAnimation {
+                    viewModel.selected = nil
+                    viewModel.setHovered(.none)
+                }
+            }
+            return .handled
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deselectItem)) { _ in
+            DispatchQueue.main.async {
+                withAnimation {
+                    viewModel.selected = nil
+                    viewModel.setHovered(.none)
+                }
+            }
+        }
         .environmentObject(viewModel)
         .frame(minHeight: Constants.minHeight)
         .onAppear {
             Task {
                 withAnimation {
-                    selectedEntry = nil
                     let queue = DispatchQueue.global(qos: .utility)
                     queue.async {
                         viewModel.fetchData()
@@ -61,11 +77,14 @@ struct EntriesSplitView: View {
      */
     private var scrollableDetailPane: some View {
         ZStack {
-            ScrollView {
-                detailPane
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
+            Group {
+                ScrollView {
+                    EntryDetailView()
+                }
+                MainFeedView()
+                    .environmentObject(CurrentSurface(.feed))
             }
+            .frame(maxWidth: .infinity, alignment: .top)
             
             macTitleBarBackground
         }
@@ -90,24 +109,6 @@ struct EntriesSplitView: View {
             }
             .padding(.top, -39)
 #endif
-        }
-    }
-    
-    /**
-     Entry detail view or what shows up when you have nothing selected
-     */
-    private var detailPane: some View {
-        Group {
-            if let unwrappedItem = selectedEntry {
-                EntryDetailView(entry: Binding(
-                    get: { unwrappedItem },
-                    set: { newValue in
-                        selectedEntry = newValue
-                    }
-                ))
-            } else {
-                Text("Pick an entry").font(.title)
-            }
         }
     }
 }
