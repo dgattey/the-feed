@@ -43,15 +43,7 @@ struct BookListItemView: View {
                     GridRow {
                         Text(book.author).font(.caption)
                     }
-                    GridRow {
-                        if let readDateFinished = book.readDateFinished {
-                            Text("Finished on \(readDateFinished.formatted(date: .abbreviated, time: .omitted))")
-                        } else if let readDateStarted = book.readDateStarted {
-                            Text("Started reading on \(readDateStarted.formatted(date: .abbreviated, time: .omitted))")
-                        } else if let createdAt = book.sysContent.createdAt {
-                            Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
-                        }
-                    }
+                    StatusTextRowView(book: book)
                     .font(.caption2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

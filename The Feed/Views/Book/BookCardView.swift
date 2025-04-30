@@ -54,15 +54,7 @@ struct BookCardView: View {
                     GridRow {
                         Text(book.author).font(Constants.subtitleFont).fontWeight(.regular)
                     }
-                    GridRow {
-                        if let readDateFinished = book.readDateFinished {
-                            Text("Finished on \(readDateFinished.formatted(date: .abbreviated, time: .omitted))")
-                        } else if let readDateStarted = book.readDateStarted {
-                            Text("Started reading on \(readDateStarted.formatted(date: .abbreviated, time: .omitted))")
-                        } else if let createdAt = book.sysContent.createdAt {
-                            Text("Created on \(createdAt.formatted(date: .abbreviated, time: .omitted))")
-                        }
-                    }
+                    StatusTextRowView(book: book)
                     .font(Constants.captionFont)
                 }
                 .foregroundStyle(
@@ -82,11 +74,11 @@ struct BookCardView: View {
     private var statusIcon: some View {
         Group {
             if book.readDateFinished != nil {
-                Image(systemName: "checkmark.circle.fill")
+                Image(systemName: "books.vertical.fill")
             } else if book.readDateStarted != nil {
                 Image(systemName: "book.fill")
             } else if book.sysContent.createdAt != nil {
-                Image(systemName: "bookmark.fill")
+                Image(systemName: "book.closed")
             }
         }
         .font(.system(size: Constants.statusIconSize))
